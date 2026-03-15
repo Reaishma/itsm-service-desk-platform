@@ -1,0 +1,2352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ITSM Platforms</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; }
+
+  /* ── TAB SWITCHER ── */
+  #platform-tabs {
+    display: flex; align-items: stretch;
+    background: #1a1a2e; border-bottom: 3px solid #111;
+    box-shadow: 0 2px 8px rgba(0,0,0,.5);
+  }
+  #platform-tabs .brand {
+    padding: 14px 20px; color: #fff; font-weight: 700;
+    font-size: 13px; letter-spacing: 1px;
+    border-right: 1px solid #333;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #platform-tabs button {
+    padding: 14px 22px; background: transparent; color: #999;
+    border: none; border-right: 1px solid #2a2a3e;
+    cursor: pointer; font-size: 13px; font-weight: 500;
+    transition: all .15s; border-bottom: 3px solid transparent;
+    margin-bottom: -3px;
+  }
+  #platform-tabs button:hover { color: #fff; background: rgba(255,255,255,.05); }
+  #platform-tabs button.active { color: #fff; font-weight: 700; }
+  #platform-tabs button[data-tab="servicenow"].active  { border-bottom-color: #82b814; }
+  #platform-tabs button[data-tab="jira"].active        { border-bottom-color: #0052cc; }
+  #platform-tabs button[data-tab="zendesk"].active     { border-bottom-color: #03b48a; }
+  #platform-tabs button[data-tab="freshservice"].active{ border-bottom-color: #f4820f; }
+
+  /* ── PLATFORM PANELS ── */
+  .platform { display: none; height: calc(100vh - 51px); }
+  .platform.active { display: flex; }
+
+  /* ════════════════════════════════════════
+     SERVICENOW
+  ════════════════════════════════════════ */
+  #servicenow { flex-direction: row; background: #f3f3f3; }
+  .sn-sidebar {
+    width: 220px; background: #1b2f53; color: #c5cdd9;
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .sn-sidebar .logo {
+    padding: 14px 16px; background: #0e1d35;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid #0a1525;
+  }
+  .sn-logo-box {
+    width: 28px; height: 28px; background: #82b814; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 900; font-size: 13px;
+  }
+  .sn-sidebar .logo span { font-weight: 700; font-size: 13px; color: #fff; }
+  .sn-search { padding: 8px 12px; border-bottom: 1px solid #0e1d35; }
+  .sn-search input {
+    width: 100%; background: #0e1d35; border: 1px solid #2a3f5f;
+    border-radius: 4px; padding: 5px 8px; color: #ccc; font-size: 12px;
+  }
+  .sn-search input::placeholder { color: #666; }
+  .sn-nav { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .sn-nav-item {
+    padding: 9px 16px; cursor: pointer;
+    border-left: 3px solid transparent;
+    color: #9aacbe; font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    transition: all .12s;
+  }
+  .sn-nav-item:hover { background: #162540; color: #ddd; }
+  .sn-nav-item.active { background: #0e1d35; border-left-color: #82b814; color: #fff; }
+  .sn-user {
+    padding: 12px 16px; border-top: 1px solid #0e1d35;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sn-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: #82b814;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 11px;
+  }
+  .sn-user .name { color: #fff; font-size: 12px; font-weight: 600; }
+  .sn-user .role { color: #7a8fa3; font-size: 11px; }
+  .sn-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .sn-topbar {
+    background: #fff; border-bottom: 1px solid #dde3ea;
+    padding: 0 20px; height: 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .sn-topbar .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .sn-topbar .breadcrumb .module { color: #82b814; }
+  .sn-topbar .breadcrumb .sep { color: #aaa; }
+  .sn-topbar .breadcrumb .page { color: #333; font-weight: 600; }
+  .sn-topbar .actions { display: flex; gap: 8px; align-items: center; }
+  .btn-green {
+    background: #82b814; color: #fff; border: none;
+    border-radius: 4px; padding: 6px 14px; cursor: pointer;
+    font-size: 12px; font-weight: 600;
+  }
+  .sn-content { flex: 1; overflow-y: auto; padding: 20px; }
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: 14px; margin-bottom: 20px;
+  }
+  .stat-card {
+    background: #fff; border-radius: 6px;
+    padding: 14px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+  .stat-card .num { font-size: 28px; font-weight: 700; }
+  .stat-card .lbl { font-size: 12px; color: #777; margin-top: 4px; }
+  .stat-card .row { display: flex; justify-content: space-between; align-items: center; }
+  .stat-card .icon { font-size: 22px; opacity: .5; }
+  .table-card {
+    background: #fff; border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08); overflow: hidden;
+  }
+  .table-header {
+    padding: 12px 18px; border-bottom: 1px solid #eee;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-header .title { font-weight: 700; font-size: 14px; color: #1b2f53; }
+  .filter-btns { display: flex; gap: 6px; }
+  .filter-btn {
+    padding: 4px 10px; font-size: 12px; border-radius: 4px;
+    border: 1px solid #ddd; background: #fff; color: #555; cursor: pointer;
+  }
+  .filter-btn.active { background: #82b814; border-color: #82b814; color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    padding: 10px 14px; text-align: left;
+    color: #666; font-weight: 600; font-size: 12px;
+    background: #f7f8fa; border-bottom: 1px solid #eee;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+  tr:hover td { background: #fafcff; }
+  .badge {
+    display: inline-block; border-radius: 3px;
+    padding: 2px 7px; font-size: 11px; font-weight: 600;
+  }
+  .inc-link { color: #0070d2; font-weight: 600; cursor: pointer; }
+  .inc-link:hover { text-decoration: underline; }
+
+  /* ════════════════════════════════════════
+     JIRA SERVICE MANAGEMENT
+  ════════════════════════════════════════ */
+  #jira { flex-direction: row; background: #f4f5f7; }
+  .jira-sidebar {
+    width: 240px; background: #0052cc; color: #fff;
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .jira-logo {
+    padding: 14px 16px; background: #0747a6;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid #0437a0;
+  }
+  .jira-logo-box {
+    width: 28px; height: 28px; background: #fff; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .jira-logo-box span { color: #0052cc; font-weight: 900; font-size: 10px; }
+  .jira-project { padding: 12px 16px; border-bottom: 1px solid #0747a6; }
+  .jira-project .lbl { font-size: 10px; opacity: .7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+  .jira-project .name { font-size: 13px; font-weight: 600; }
+  .jira-project .sub  { font-size: 11px; opacity: .7; }
+  .jira-nav { padding: 8px 0; flex: 1; }
+  .jira-nav-item {
+    padding: 9px 16px; display: flex; align-items: center; gap: 10px;
+    cursor: pointer; font-size: 13px; border-left: 3px solid transparent;
+    transition: all .12s;
+  }
+  .jira-nav-item:hover { background: #0747a6; }
+  .jira-nav-item.active { background: #0747a6; border-left-color: #4c9aff; }
+  .jira-user {
+    padding: 12px 16px; border-top: 1px solid #0747a6;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .jira-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: #36b37e;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 11px;
+  }
+  .jira-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .jira-topbar {
+    background: #fff; border-bottom: 1px solid #dfe1e6;
+    padding: 0 20px; height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .jira-topbar h1 { font-size: 18px; font-weight: 700; color: #172b4d; }
+  .jira-topbar p  { font-size: 12px; color: #5e6c84; }
+  .btn-blue {
+    background: #0052cc; color: #fff; border: none;
+    border-radius: 4px; padding: 7px 14px; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+  }
+  .jira-statsbar {
+    background: #fff; border-bottom: 1px solid #dfe1e6;
+    padding: 10px 20px; display: flex; gap: 24px;
+  }
+  .jira-stat { display: flex; align-items: center; gap: 6px; }
+  .jira-stat .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .jira-stat .val { font-size: 13px; font-weight: 600; color: #172b4d; }
+  .jira-stat .lbl { font-size: 12px; color: #5e6c84; }
+  .jira-body { flex: 1; display: flex; overflow: hidden; }
+  .jira-queue-nav {
+    width: 200px; background: #fff; border-right: 1px solid #dfe1e6;
+    overflow-y: auto; padding: 12px 0;
+  }
+  .jira-queue-nav .section-lbl {
+    padding: 4px 16px; font-size: 11px; color: #5e6c84;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .jira-queue-item {
+    padding: 8px 16px; cursor: pointer; font-size: 13px;
+    color: #42526e; border-left: 3px solid transparent;
+    transition: all .12s;
+  }
+  .jira-queue-item:hover  { background: #f4f5f7; }
+  .jira-queue-item.active { background: #deebff; color: #0052cc; font-weight: 600; border-left-color: #0052cc; }
+  .jira-table-area { flex: 1; overflow-y: auto; padding: 20px; }
+  .jira-table-wrap { background: #fff; border-radius: 6px; border: 1px solid #dfe1e6; overflow: hidden; }
+  .jira-table th { background: #f4f5f7; border-bottom: 2px solid #dfe1e6; color: #5e6c84; }
+  .jira-table tr:hover td { background: #f8f9fc; }
+
+  /* ════════════════════════════════════════
+     ZENDESK
+  ════════════════════════════════════════ */
+  #zendesk { flex-direction: row; background: #f3f4f5; }
+  .zd-sidebar {
+    width: 56px; background: #1f3a3c; color: #fff;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12px 0; gap: 4px; flex-shrink: 0;
+  }
+  .zd-logo {
+    width: 32px; height: 32px; background: #03b48a; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 13px; margin-bottom: 16px;
+  }
+  .zd-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; cursor: pointer; transition: all .12s;
+  }
+  .zd-icon:hover  { background: rgba(255,255,255,.12); }
+  .zd-icon.active { background: rgba(255,255,255,.18); }
+  .zd-spacer { flex: 1; }
+  .zd-left {
+    width: 220px; background: #fff; border-right: 1px solid #e5e7eb;
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .zd-left-header {
+    padding: 14px 16px; border-bottom: 1px solid #e5e7eb;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .zd-left-header h3 { font-size: 14px; font-weight: 700; color: #1f2937; }
+  .zd-btn-sm {
+    background: #03b48a; color: #fff; border: none;
+    border-radius: 4px; padding: 4px 10px; font-size: 12px; cursor: pointer;
+  }
+  .zd-search {
+    padding: 10px 12px; border-bottom: 1px solid #e5e7eb;
+  }
+  .zd-search input {
+    width: 100%; border: 1px solid #d1d5db; border-radius: 6px;
+    padding: 6px 10px; font-size: 12px; color: #374151;
+  }
+  .zd-views { flex: 1; overflow-y: auto; }
+  .zd-view-group { padding: 8px 0; }
+  .zd-view-group-label {
+    padding: 4px 16px; font-size: 10px; color: #9ca3af;
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+  }
+  .zd-view-item {
+    padding: 8px 16px; cursor: pointer; font-size: 13px;
+    color: #374151; display: flex; justify-content: space-between;
+    align-items: center; transition: all .1s;
+  }
+  .zd-view-item:hover  { background: #f9fafb; }
+  .zd-view-item.active { background: #ecfdf5; color: #059669; font-weight: 600; }
+  .zd-count { font-size: 11px; background: #e5e7eb; border-radius: 20px; padding: 1px 7px; color: #6b7280; }
+  .zd-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .zd-topbar {
+    background: #fff; border-bottom: 1px solid #e5e7eb;
+    padding: 0 20px; height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .zd-topbar h2 { font-size: 16px; font-weight: 700; color: #111827; }
+  .zd-actions { display: flex; gap: 8px; align-items: center; }
+  .zd-content { flex: 1; overflow-y: auto; padding: 20px; }
+  .zd-ticket-list { background: #fff; border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden; }
+  .zd-ticket-list th { background: #f9fafb; color: #6b7280; border-bottom: 2px solid #e5e7eb; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+  .zd-ticket-list td { border-bottom: 1px solid #f3f4f6; }
+  .zd-ticket-list tr:hover td { background: #fafafa; }
+  .zd-priority-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .zd-status { padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+
+  /* ════════════════════════════════════════
+     FRESHSERVICE
+  ════════════════════════════════════════ */
+  #freshservice { flex-direction: row; background: #f2f4f8; }
+  .fs-sidebar {
+    width: 220px; background: #fff; border-right: 1px solid #e0e4ef;
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .fs-logo {
+    padding: 16px; border-bottom: 1px solid #e0e4ef;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .fs-logo-box {
+    width: 30px; height: 30px; background: #f4820f; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 900; font-size: 12px;
+  }
+  .fs-logo-txt { font-weight: 700; font-size: 14px; color: #1a1f36; }
+  .fs-logo-sub { font-size: 10px; color: #888; }
+  .fs-nav { flex: 1; overflow-y: auto; padding: 12px 0; }
+  .fs-nav-section { padding: 4px 16px 6px; font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .fs-nav-item {
+    padding: 9px 16px; cursor: pointer; font-size: 13px;
+    color: #4a5568; display: flex; align-items: center; gap: 10px;
+    border-left: 3px solid transparent; transition: all .12s;
+  }
+  .fs-nav-item:hover  { background: #f7f8fc; color: #1a1f36; }
+  .fs-nav-item.active { background: #fff5eb; color: #f4820f; border-left-color: #f4820f; font-weight: 600; }
+  .fs-user {
+    padding: 12px 16px; border-top: 1px solid #e0e4ef;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .fs-avatar {
+    width: 30px; height: 30px; border-radius: 50%; background: #f4820f;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 11px;
+  }
+  .fs-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .fs-topbar {
+    background: #fff; border-bottom: 1px solid #e0e4ef;
+    padding: 0 20px; height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .fs-topbar h2 { font-size: 16px; font-weight: 700; color: #1a1f36; }
+  .fs-search {
+    width: 240px; display: flex; align-items: center;
+    background: #f7f8fc; border: 1px solid #e0e4ef; border-radius: 6px;
+    padding: 6px 12px; gap: 6px;
+  }
+  .fs-search input { border: none; background: transparent; font-size: 13px; color: #4a5568; width: 100%; }
+  .btn-orange {
+    background: #f4820f; color: #fff; border: none;
+    border-radius: 5px; padding: 7px 14px; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+  }
+  .fs-content { flex: 1; overflow-y: auto; padding: 20px; }
+  .fs-kpi-grid {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: 14px; margin-bottom: 20px;
+  }
+  .fs-kpi {
+    background: #fff; border-radius: 8px; padding: 16px 18px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.06); border: 1px solid #e8ecf6;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .fs-kpi .val { font-size: 30px; font-weight: 800; }
+  .fs-kpi .lbl { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .fs-kpi .icon { font-size: 28px; opacity: .6; }
+  .fs-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  .fs-card { background: #fff; border-radius: 8px; border: 1px solid #e8ecf6; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .fs-card-header { padding: 14px 18px; border-bottom: 1px solid #e8ecf6; font-weight: 700; font-size: 14px; color: #1a1f36; display: flex; justify-content: space-between; align-items: center; }
+  .fs-table th { background: #f7f8fc; color: #6b7280; border-bottom: 2px solid #e8ecf6; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+  .fs-table td { border-bottom: 1px solid #f0f2f8; }
+  .fs-table tr:hover td { background: #fafbff; }
+  .catalog-item {
+    padding: 14px 18px; border-bottom: 1px solid #f0f2f8;
+    display: flex; align-items: center; gap: 12px; cursor: pointer;
+  }
+  .catalog-item:hover { background: #fafbff; }
+  .catalog-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .catalog-item .lbl { font-size: 13px; font-weight: 600; color: #1a1f36; }
+  .catalog-item .sub { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+
+  /* ════════════════════════════════════════
+     MOBILE RESPONSIVE  (≤ 768px)
+  ════════════════════════════════════════ */
+  @media (max-width: 768px) {
+
+    /* ── Tab switcher ── */
+    #platform-tabs {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+    #platform-tabs .brand { flex-shrink: 0; padding: 10px 14px; font-size: 12px; }
+    #platform-tabs button { flex-shrink: 0; padding: 10px 14px; font-size: 12px; white-space: nowrap; }
+
+    /* ── Platform panels ── */
+    .platform { height: auto; min-height: calc(100vh - 44px); overflow-y: auto; }
+    #servicenow, #jira, #zendesk, #freshservice { flex-direction: column; }
+
+    /* ── Tables: horizontal scroll ── */
+    .table-card, .jira-table-wrap, .zd-ticket-list, .fs-card { overflow-x: auto; }
+    table { min-width: 560px; }
+
+    /* ── Stats grids: 2 columns ── */
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .fs-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .fs-grid { grid-template-columns: 1fr; }
+
+    /* ── Modals: full-width ── */
+    #platform-tabs ~ div[id$="-modal"] > div,
+    [id$="-modal"] > div {
+      width: calc(100vw - 32px) !important;
+      max-width: 100% !important;
+      margin: 16px;
+    }
+
+    /* ────────────────────────────────────
+       SERVICENOW — sidebar → top bar
+    ──────────────────────────────────── */
+    .sn-sidebar {
+      width: 100%; flex-direction: row; flex-shrink: 0;
+      overflow-x: auto; overflow-y: visible;
+      height: 44px; min-height: 44px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sn-sidebar .logo { flex-shrink: 0; padding: 0 12px; border-bottom: none; border-right: 1px solid #0a1525; }
+    .sn-sidebar .logo span { display: none; }
+    .sn-search { display: none; }
+    .sn-nav { flex-direction: row; overflow-x: auto; overflow-y: visible; padding: 0; flex: 1; }
+    .sn-nav-item {
+      min-width: max-content; white-space: nowrap;
+      padding: 0 14px; height: 44px; font-size: 12px;
+      border-left: none; border-bottom: 3px solid transparent;
+      flex-shrink: 0;
+    }
+    .sn-nav-item.active { background: #0e1d35; border-left: none; border-bottom-color: #82b814; }
+    .sn-user { display: none; }
+    .sn-main { flex: 1; min-height: 0; overflow: visible; }
+    .sn-topbar { height: auto; min-height: 48px; flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+    .sn-topbar .actions input[type="text"] { display: none; }
+    .sn-content { padding: 12px; }
+
+    /* ────────────────────────────────────
+       JIRA — sidebar → top bar
+    ──────────────────────────────────── */
+    .jira-sidebar {
+      width: 100%; flex-direction: row; flex-shrink: 0;
+      overflow-x: auto; overflow-y: visible;
+      height: 44px; min-height: 44px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .jira-logo { flex-shrink: 0; padding: 0 12px; border-bottom: none; border-right: 1px solid #0437a0; }
+    .jira-logo > div { display: none; }
+    .jira-project { display: none; }
+    .jira-nav { flex-direction: row; padding: 0; flex: 1; overflow-x: auto; }
+    .jira-nav-item {
+      min-width: max-content; white-space: nowrap;
+      padding: 0 14px; height: 44px; font-size: 12px;
+      border-left: none; border-bottom: 3px solid transparent;
+      flex-shrink: 0;
+    }
+    .jira-nav-item.active { border-left: none; border-bottom-color: #4c9aff; }
+    .jira-user { display: none; }
+    .jira-main { flex: 1; overflow: visible; }
+    .jira-topbar { height: auto; min-height: 48px; flex-wrap: wrap; gap: 6px; padding: 8px 12px; }
+    .jira-topbar h1 { font-size: 15px; }
+    .jira-statsbar {
+      overflow-x: auto; flex-wrap: nowrap; gap: 14px; padding: 8px 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .jira-body { flex-direction: column; overflow: visible; }
+    .jira-queue-nav {
+      width: 100%; height: auto; border-right: none;
+      border-bottom: 1px solid #dfe1e6;
+      display: flex; flex-direction: row;
+      overflow-x: auto; padding: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    .jira-queue-nav .section-lbl { display: none; }
+    .jira-queue-item {
+      min-width: max-content; white-space: nowrap;
+      padding: 8px 14px; border-left: none;
+      border-bottom: 3px solid transparent; flex-shrink: 0;
+    }
+    .jira-queue-item.active { border-left: none; border-bottom-color: #0052cc; }
+    .jira-table-area { padding: 12px; overflow: visible; }
+
+    /* ────────────────────────────────────
+       ZENDESK — sidebars → compact top bar
+    ──────────────────────────────────── */
+    .zd-sidebar {
+      width: 100%; flex-direction: row; height: 44px; min-height: 44px;
+      padding: 0 8px; gap: 2px; flex-shrink: 0;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      justify-content: flex-start;
+    }
+    .zd-logo { width: 28px; height: 28px; margin-bottom: 0; margin-right: 6px; flex-shrink: 0; font-size: 11px; }
+    .zd-spacer { display: none; }
+    .zd-icon { width: 32px; height: 32px; font-size: 15px; flex-shrink: 0; }
+
+    /* Views panel: stack left-panel above main */
+    #zd-views-view { flex-direction: column !important; }
+    .zd-left {
+      width: 100%; flex-shrink: 0;
+      border-right: none; border-bottom: 1px solid #e5e7eb;
+      max-height: 220px;
+    }
+    .zd-views { max-height: 140px; }
+    .zd-main { flex: 1; overflow: visible; }
+    .zd-topbar { height: auto; min-height: 48px; flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+    .zd-content { padding: 12px; }
+
+    /* Other Zendesk section views */
+    #zd-search-view, #zd-tickets-view, #zd-reporting-view,
+    #zd-customers-view, #zd-knowledge-view,
+    #zd-settings-view, #zd-apps-view {
+      padding: 14px !important;
+    }
+
+    /* ────────────────────────────────────
+       FRESHSERVICE — sidebar → top bar
+    ──────────────────────────────────── */
+    .fs-sidebar {
+      width: 100%; flex-direction: row; flex-shrink: 0;
+      overflow-x: auto; overflow-y: visible;
+      height: 44px; min-height: 44px; border-right: none;
+      border-bottom: 1px solid #e0e4ef;
+      -webkit-overflow-scrolling: touch;
+    }
+    .fs-logo { flex-shrink: 0; border-bottom: none; padding: 0 12px; }
+    .fs-logo-txt, .fs-logo-sub { display: none; }
+    .fs-nav { flex-direction: row; overflow-x: auto; padding: 0; flex: 1; }
+    .fs-nav-section { display: none; }
+    .fs-nav-item {
+      min-width: max-content; white-space: nowrap;
+      padding: 0 14px; height: 44px; font-size: 12px;
+      border-left: none; border-bottom: 3px solid transparent;
+      flex-shrink: 0;
+    }
+    .fs-nav-item.active { border-left: none; border-bottom-color: #f4820f; background: #fff5eb; }
+    .fs-user { display: none; }
+    .fs-main { flex: 1; overflow: visible; }
+    .fs-topbar { height: auto; flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+    .fs-search { width: 100%; }
+    .fs-content { padding: 12px; }
+  }
+
+  /* ── Extra-small screens (≤ 480px) ── */
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .fs-kpi-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-card .num { font-size: 22px; }
+    .fs-kpi .val { font-size: 22px; }
+    #platform-tabs .brand { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ TAB SWITCHER ═══ -->
+<div id="platform-tabs">
+  <div class="brand">⊞ ITSM Platforms</div>
+  <button class="active" data-tab="servicenow" onclick="switchTab('servicenow')">ServiceNow</button>
+  <button data-tab="jira" onclick="switchTab('jira')">Jira Service Management</button>
+  <button data-tab="zendesk" onclick="switchTab('zendesk')">Zendesk</button>
+  <button data-tab="freshservice" onclick="switchTab('freshservice')">Freshservice</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SERVICENOW
+═══════════════════════════════════════════════════ -->
+<div id="servicenow" class="platform active">
+  <!-- Sidebar -->
+  <div class="sn-sidebar">
+    <div class="logo">
+      <div class="sn-logo-box">SN</div>
+      <span>ServiceNow</span>
+    </div>
+    <div class="sn-search"><input type="text" placeholder="🔍  Search" /></div>
+    <div class="sn-nav">
+      <div class="sn-nav-item" data-view="sn-home" onclick="snNav(this)"><span>⊞</span> Home</div>
+      <div class="sn-nav-item active" data-view="sn-incident" onclick="snNav(this)"><span>⚠</span> Incident</div>
+      <div class="sn-nav-item" data-view="sn-problem" onclick="snNav(this)"><span>🔍</span> Problem</div>
+      <div class="sn-nav-item" data-view="sn-change" onclick="snNav(this)"><span>🔄</span> Change</div>
+      <div class="sn-nav-item" data-view="sn-catalog" onclick="snNav(this)"><span>📋</span> Service Catalog</div>
+      <div class="sn-nav-item" data-view="sn-cmdb" onclick="snNav(this)"><span>🗄</span> CMDB</div>
+      <div class="sn-nav-item" data-view="sn-reports" onclick="snNav(this)"><span>📊</span> Reports</div>
+      <div class="sn-nav-item" data-view="sn-knowledge" onclick="snNav(this)"><span>📚</span> Knowledge</div>
+      <div class="sn-nav-item" data-view="sn-hr" onclick="snNav(this)"><span>👥</span> HR Cases</div>
+      <div class="sn-nav-item" data-view="sn-admin" onclick="snNav(this)"><span>⚙</span> Administration</div>
+    </div>
+    <div class="sn-user">
+      <div class="sn-avatar">IA</div>
+      <div><div class="name">IT Admin</div><div class="role">IT Manager</div></div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="sn-main">
+    <div class="sn-topbar">
+      <div class="breadcrumb">
+        <span class="module">ITSM</span>
+        <span class="sep">/</span>
+        <span class="page">Incident Management</span>
+      </div>
+      <div class="actions">
+        <input type="text" placeholder="Search incidents…" style="border:1px solid #dde3ea;border-radius:4px;padding:5px 10px;font-size:12px;width:180px;" />
+        <button class="btn-green" onclick="showNewIncident()">+ New Incident</button>
+        <span style="font-size:18px;cursor:pointer;padding:4px 8px;" onclick="showToast('You have 3 new notifications')">🔔</span>
+        <span style="font-size:18px;cursor:pointer;padding:4px 8px;" onclick="showToast('Logged in as IT Admin')">👤</span>
+      </div>
+    </div>
+
+    <div class="sn-content">
+
+      <!-- ── HOME ── -->
+      <div id="sn-home" class="sn-view" style="display:none;">
+        <div style="font-size:16px;font-weight:700;color:#1b2f53;margin-bottom:16px;">Welcome back, IT Admin</div>
+        <div class="stats-grid">
+          <div class="stat-card" style="border-top:3px solid #e74c3c;"><div class="row"><div class="num" style="color:#e74c3c;">47</div><div class="icon">⚠</div></div><div class="lbl">Open Incidents</div></div>
+          <div class="stat-card" style="border-top:3px solid #9b59b6;"><div class="row"><div class="num" style="color:#9b59b6;">12</div><div class="icon">🔍</div></div><div class="lbl">Open Problems</div></div>
+          <div class="stat-card" style="border-top:3px solid #3498db;"><div class="row"><div class="num" style="color:#3498db;">8</div><div class="icon">🔄</div></div><div class="lbl">Pending Changes</div></div>
+          <div class="stat-card" style="border-top:3px solid #27ae60;"><div class="row"><div class="num" style="color:#27ae60;">95%</div><div class="icon">📈</div></div><div class="lbl">SLA Compliance</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px;">
+          <div class="table-card">
+            <div class="table-header"><span class="title">Recent Activity</span></div>
+            <table><thead><tr><th>Time</th><th>Event</th><th>User</th></tr></thead><tbody>
+              <tr><td style="color:#999;font-size:11px;">2 min ago</td><td>INC0001234 created — Critical</td><td>System</td></tr>
+              <tr><td style="color:#999;font-size:11px;">8 min ago</td><td>INC0001228 escalated to P1</td><td>Sarah Lee</td></tr>
+              <tr><td style="color:#999;font-size:11px;">22 min ago</td><td>Change CHG0000891 approved</td><td>CAB Board</td></tr>
+              <tr><td style="color:#999;font-size:11px;">1 hr ago</td><td>PRB0000342 root cause identified</td><td>Mike Chen</td></tr>
+              <tr><td style="color:#999;font-size:11px;">2 hr ago</td><td>INC0001230 resolved</td><td>Tom Brady</td></tr>
+              <tr><td style="color:#999;font-size:11px;">3 hr ago</td><td>Knowledge article KB0001023 published</td><td>Dana White</td></tr>
+            </tbody></table>
+          </div>
+          <div class="table-card">
+            <div class="table-header"><span class="title">My Open Tasks</span></div>
+            <table><thead><tr><th>Number</th><th>Type</th><th>Due</th></tr></thead><tbody>
+              <tr><td class="inc-link">INC0001234</td><td><span class="badge" style="background:#e74c3c22;color:#e74c3c;">Incident</span></td><td style="color:#e74c3c;font-size:12px;">Overdue</td></tr>
+              <tr><td class="inc-link">CHG0000892</td><td><span class="badge" style="background:#3498db22;color:#3498db;">Change</span></td><td style="color:#555;font-size:12px;">Today</td></tr>
+              <tr><td class="inc-link">PRB0000341</td><td><span class="badge" style="background:#9b59b622;color:#9b59b6;">Problem</span></td><td style="color:#555;font-size:12px;">Mar 17</td></tr>
+              <tr><td class="inc-link">INC0001220</td><td><span class="badge" style="background:#e74c3c22;color:#e74c3c;">Incident</span></td><td style="color:#f0ad4e;font-size:12px;">Tomorrow</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INCIDENT ── -->
+      <div id="sn-incident" class="sn-view">
+        <div class="stats-grid">
+          <div class="stat-card" style="border-top:3px solid #e74c3c;"><div class="row"><div class="num" style="color:#e74c3c;">47</div><div class="icon">⚠</div></div><div class="lbl">Open Incidents</div></div>
+          <div class="stat-card" style="border-top:3px solid #3498db;"><div class="row"><div class="num" style="color:#3498db;">23</div><div class="icon">⚙</div></div><div class="lbl">In Progress</div></div>
+          <div class="stat-card" style="border-top:3px solid #27ae60;"><div class="row"><div class="num" style="color:#27ae60;">18</div><div class="icon">✓</div></div><div class="lbl">Resolved Today</div></div>
+          <div class="stat-card" style="border-top:3px solid #f0ad4e;"><div class="row"><div class="num" style="color:#f0ad4e;">3</div><div class="icon">⏰</div></div><div class="lbl">SLA Breached</div></div>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <span class="title">Incident List</span>
+            <div class="filter-btns" id="sn-filters">
+              <button class="filter-btn active" onclick="snFilter(this,'All')">All</button>
+              <button class="filter-btn" onclick="snFilter(this,'New')">New</button>
+              <button class="filter-btn" onclick="snFilter(this,'In Progress')">In Progress</button>
+              <button class="filter-btn" onclick="snFilter(this,'Resolved')">Resolved</button>
+            </div>
+          </div>
+          <table><thead><tr><th>Number</th><th>Priority</th><th>State</th><th>Category</th><th>Short Description</th><th>Assigned To</th><th>Updated</th></tr></thead>
+          <tbody id="sn-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ── PROBLEM ── -->
+      <div id="sn-problem" class="sn-view" style="display:none;">
+        <div class="stats-grid">
+          <div class="stat-card" style="border-top:3px solid #9b59b6;"><div class="row"><div class="num" style="color:#9b59b6;">12</div><div class="icon">🔍</div></div><div class="lbl">Open Problems</div></div>
+          <div class="stat-card" style="border-top:3px solid #e67e22;"><div class="row"><div class="num" style="color:#e67e22;">4</div><div class="icon">🔬</div></div><div class="lbl">Root Cause Analysis</div></div>
+          <div class="stat-card" style="border-top:3px solid #27ae60;"><div class="row"><div class="num" style="color:#27ae60;">7</div><div class="icon">✓</div></div><div class="lbl">Known Errors</div></div>
+          <div class="stat-card" style="border-top:3px solid #3498db;"><div class="row"><div class="num" style="color:#3498db;">3</div><div class="icon">🛠</div></div><div class="lbl">Fix In Progress</div></div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><span class="title">Problem Records</span><button class="btn-green" style="font-size:12px;padding:5px 12px;" onclick="openModal('sn-problem-modal')">+ New Problem</button></div>
+          <table><thead><tr><th>Number</th><th>Priority</th><th>State</th><th>Category</th><th>Short Description</th><th>Assigned To</th><th>Related Incidents</th></tr></thead>
+          <tbody>
+            <tr><td class="inc-link">PRB0000345</td><td><span class="badge" style="background:#d9534f;color:#fff;">1-Critical</span></td><td><span class="badge" style="background:#e74c3c22;color:#e74c3c;">Analysis</span></td><td>Network</td><td>Intermittent VPN drops — root cause unknown</td><td>John Smith</td><td style="color:#0070d2;font-weight:600;">14</td></tr>
+            <tr><td class="inc-link">PRB0000344</td><td><span class="badge" style="background:#f0ad4e;color:#fff;">2-High</span></td><td><span class="badge" style="background:#e67e2222;color:#e67e22;">Known Error</span></td><td>Software</td><td>Salesforce timeout on reports module</td><td>Mike Chen</td><td style="color:#0070d2;font-weight:600;">6</td></tr>
+            <tr><td class="inc-link">PRB0000343</td><td><span class="badge" style="background:#5bc0de;color:#fff;">3-Moderate</span></td><td><span class="badge" style="background:#3498db22;color:#3498db;">Fix in Progress</span></td><td>Database</td><td>Slow query performance on reporting tables</td><td>Dana White</td><td style="color:#0070d2;font-weight:600;">3</td></tr>
+            <tr><td class="inc-link">PRB0000342</td><td><span class="badge" style="background:#f0ad4e;color:#fff;">2-High</span></td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Resolved</span></td><td>Email</td><td>Outlook mobile sync failures — Exchange config</td><td>Sarah Lee</td><td style="color:#0070d2;font-weight:600;">9</td></tr>
+            <tr><td class="inc-link">PRB0000341</td><td><span class="badge" style="background:#5cb85c;color:#fff;">4-Low</span></td><td><span class="badge" style="background:#e67e2222;color:#e67e22;">Known Error</span></td><td>Hardware</td><td>Printer queue freezes after Windows update KB5032</td><td>Tom Brady</td><td style="color:#0070d2;font-weight:600;">2</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── CHANGE ── -->
+      <div id="sn-change" class="sn-view" style="display:none;">
+        <div class="stats-grid">
+          <div class="stat-card" style="border-top:3px solid #3498db;"><div class="row"><div class="num" style="color:#3498db;">8</div><div class="icon">🔄</div></div><div class="lbl">Pending Approval</div></div>
+          <div class="stat-card" style="border-top:3px solid #27ae60;"><div class="row"><div class="num" style="color:#27ae60;">5</div><div class="icon">✓</div></div><div class="lbl">Approved</div></div>
+          <div class="stat-card" style="border-top:3px solid #f0ad4e;"><div class="row"><div class="num" style="color:#f0ad4e;">2</div><div class="icon">⚠</div></div><div class="lbl">In Review</div></div>
+          <div class="stat-card" style="border-top:3px solid #e74c3c;"><div class="row"><div class="num" style="color:#e74c3c;">1</div><div class="icon">✕</div></div><div class="lbl">Rejected</div></div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><span class="title">Change Requests</span><button class="btn-green" style="font-size:12px;padding:5px 12px;" onclick="openModal('sn-change-modal')">+ New Change</button></div>
+          <table><thead><tr><th>Number</th><th>Type</th><th>Risk</th><th>State</th><th>Short Description</th><th>Requested By</th><th>Scheduled</th></tr></thead>
+          <tbody>
+            <tr><td class="inc-link">CHG0000895</td><td><span class="badge" style="background:#3498db22;color:#3498db;">Normal</span></td><td><span class="badge" style="background:#f0ad4e22;color:#f0ad4e;">Medium</span></td><td><span class="badge" style="background:#e67e2222;color:#e67e22;">Pending</span></td><td>Upgrade SQL Server 2019 to 2022 on PROD-DB-01</td><td>Mike Chen</td><td>Mar 18, 02:00</td></tr>
+            <tr><td class="inc-link">CHG0000894</td><td><span class="badge" style="background:#e74c3c22;color:#e74c3c;">Emergency</span></td><td><span class="badge" style="background:#d9534f22;color:#d9534f;">High</span></td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Approved</span></td><td>Patch critical CVE-2024-1234 on all web servers</td><td>Security Team</td><td>Mar 15, 22:00</td></tr>
+            <tr><td class="inc-link">CHG0000893</td><td><span class="badge" style="background:#3498db22;color:#3498db;">Normal</span></td><td><span class="badge" style="background:#5cb85c22;color:#5cb85c;">Low</span></td><td><span class="badge" style="background:#3498db22;color:#3498db;">In Review</span></td><td>Add new VLAN 150 for IoT devices in Building C</td><td>Net Ops</td><td>Mar 20, 08:00</td></tr>
+            <tr><td class="inc-link">CHG0000892</td><td><span class="badge" style="background:#9b59b622;color:#9b59b6;">Standard</span></td><td><span class="badge" style="background:#5cb85c22;color:#5cb85c;">Low</span></td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Approved</span></td><td>Monthly SSL certificate renewal for portal.acme.com</td><td>John Admin</td><td>Mar 16, 09:00</td></tr>
+            <tr><td class="inc-link">CHG0000891</td><td><span class="badge" style="background:#3498db22;color:#3498db;">Normal</span></td><td><span class="badge" style="background:#f0ad4e22;color:#f0ad4e;">Medium</span></td><td><span class="badge" style="background:#e74c3c22;color:#e74c3c;">Rejected</span></td><td>Migrate file shares from on-prem to SharePoint Online</td><td>Dana White</td><td>Cancelled</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── SERVICE CATALOG ── -->
+      <div id="sn-catalog" class="sn-view" style="display:none;">
+        <div style="font-size:15px;font-weight:700;color:#1b2f53;margin-bottom:16px;">Service Catalog</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+          <div style="background:#fff;border-radius:6px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border:1px solid #eee;" onmouseover="this.style.borderColor='#82b814'" onmouseout="this.style.borderColor='#eee'">
+            <div style="font-size:28px;margin-bottom:8px;">💻</div><div style="font-weight:700;font-size:14px;color:#1b2f53;">New Hardware Request</div><div style="font-size:12px;color:#888;margin-top:4px;">Request laptop, monitor, keyboard or peripherals</div><div style="margin-top:12px;"><span class="badge" style="background:#82b81422;color:#82b814;">Hardware</span></div>
+          </div>
+          <div style="background:#fff;border-radius:6px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border:1px solid #eee;" onmouseover="this.style.borderColor='#82b814'" onmouseout="this.style.borderColor='#eee'">
+            <div style="font-size:28px;margin-bottom:8px;">🔑</div><div style="font-weight:700;font-size:14px;color:#1b2f53;">Access Request</div><div style="font-size:12px;color:#888;margin-top:4px;">Request access to systems, applications or resources</div><div style="margin-top:12px;"><span class="badge" style="background:#3498db22;color:#3498db;">Access</span></div>
+          </div>
+          <div style="background:#fff;border-radius:6px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border:1px solid #eee;" onmouseover="this.style.borderColor='#82b814'" onmouseout="this.style.borderColor='#eee'">
+            <div style="font-size:28px;margin-bottom:8px;">📱</div><div style="font-weight:700;font-size:14px;color:#1b2f53;">Mobile Device Setup</div><div style="font-size:12px;color:#888;margin-top:4px;">Enroll and configure smartphones or tablets</div><div style="margin-top:12px;"><span class="badge" style="background:#9b59b622;color:#9b59b6;">Mobile</span></div>
+          </div>
+          <div style="background:#fff;border-radius:6px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border:1px solid #eee;" onmouseover="this.style.borderColor='#82b814'" onmouseout="this.style.borderColor='#eee'">
+            <div style="font-size:28px;margin-bottom:8px;">🌐</div><div style="font-weight:700;font-size:14px;color:#1b2f53;">VPN / Remote Access</div><div style="font-size:12px;color:#888;margin-top:4px;">Set up or troubleshoot remote access connectivity</div><div style="margin-top:12px;"><span class="badge" style="background:#e67e2222;color:#e67e22;">Network</span></div>
+          </div>
+          <div style="background:#fff;border-radius:6px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border:1px solid #eee;" onmouseover="this.style.borderColor='#82b814'" onmouseout="this.style.borderColor='#eee'">
+            <div style="font-size:28px;margin-bottom:8px;">🖨</div><div style="font-weight:700;font-size:14px;color:#1b2f53;">Printer Setup</div><div style="font-size:12px;color:#888;margin-top:4px;">Install or configure network/local printers</div><div style="margin-top:12px;"><span class="badge" style="background:#82b81422;color:#82b814;">Hardware</span></div>
+          </div>
+          <div style="background:#fff;border-radius:6px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border:1px solid #eee;" onmouseover="this.style.borderColor='#82b814'" onmouseout="this.style.borderColor='#eee'">
+            <div style="font-size:28px;margin-bottom:8px;">☁</div><div style="font-weight:700;font-size:14px;color:#1b2f53;">Cloud Services</div><div style="font-size:12px;color:#888;margin-top:4px;">Microsoft 365, Azure, AWS provisioning requests</div><div style="margin-top:12px;"><span class="badge" style="background:#3498db22;color:#3498db;">Cloud</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CMDB ── -->
+      <div id="sn-cmdb" class="sn-view" style="display:none;">
+        <div class="stats-grid">
+          <div class="stat-card" style="border-top:3px solid #1b2f53;"><div class="row"><div class="num" style="color:#1b2f53;">1,248</div><div class="icon">🖥</div></div><div class="lbl">Total CIs</div></div>
+          <div class="stat-card" style="border-top:3px solid #27ae60;"><div class="row"><div class="num" style="color:#27ae60;">1,190</div><div class="icon">✓</div></div><div class="lbl">Operational</div></div>
+          <div class="stat-card" style="border-top:3px solid #f0ad4e;"><div class="row"><div class="num" style="color:#f0ad4e;">42</div><div class="icon">⚠</div></div><div class="lbl">Needs Attention</div></div>
+          <div class="stat-card" style="border-top:3px solid #e74c3c;"><div class="row"><div class="num" style="color:#e74c3c;">16</div><div class="icon">✕</div></div><div class="lbl">Retired</div></div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><span class="title">Configuration Items</span></div>
+          <table><thead><tr><th>CI Name</th><th>Class</th><th>Status</th><th>OS / Version</th><th>IP Address</th><th>Assigned To</th><th>Last Scan</th></tr></thead>
+          <tbody>
+            <tr><td class="inc-link">PROD-WEB-01</td><td>Server</td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Operational</span></td><td>Windows Server 2022</td><td>10.10.1.10</td><td>John Smith</td><td>Mar 15</td></tr>
+            <tr><td class="inc-link">PROD-DB-01</td><td>Database Server</td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Operational</span></td><td>SQL Server 2019</td><td>10.10.1.20</td><td>Mike Chen</td><td>Mar 15</td></tr>
+            <tr><td class="inc-link">CORP-SW-04</td><td>Network Switch</td><td><span class="badge" style="background:#f0ad4e22;color:#f0ad4e;">Attention</span></td><td>Cisco IOS 15.2</td><td>10.10.0.4</td><td>Net Ops</td><td>Mar 14</td></tr>
+            <tr><td class="inc-link">FW-EDGE-01</td><td>Firewall</td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Operational</span></td><td>FortiOS 7.4</td><td>203.0.113.1</td><td>Net Ops</td><td>Mar 15</td></tr>
+            <tr><td class="inc-link">DESKTOP-HR-22</td><td>Workstation</td><td><span class="badge" style="background:#e74c3c22;color:#e74c3c;">Retired</span></td><td>Windows 10 21H2</td><td>10.10.5.22</td><td>Unassigned</td><td>Jan 12</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── REPORTS ── -->
+      <div id="sn-reports" class="sn-view" style="display:none;">
+        <div style="font-size:15px;font-weight:700;color:#1b2f53;margin-bottom:16px;">Reports &amp; Analytics</div>
+        <div class="stats-grid">
+          <div class="stat-card" style="border-top:3px solid #82b814;"><div class="row"><div class="num" style="color:#82b814;">95.2%</div><div class="icon">📈</div></div><div class="lbl">SLA Compliance (MTD)</div></div>
+          <div class="stat-card" style="border-top:3px solid #3498db;"><div class="row"><div class="num" style="color:#3498db;">2.4h</div><div class="icon">⏱</div></div><div class="lbl">Avg Resolution Time</div></div>
+          <div class="stat-card" style="border-top:3px solid #27ae60;"><div class="row"><div class="num" style="color:#27ae60;">4.7</div><div class="icon">⭐</div></div><div class="lbl">CSAT Score</div></div>
+          <div class="stat-card" style="border-top:3px solid #9b59b6;"><div class="row"><div class="num" style="color:#9b59b6;">312</div><div class="icon">🎫</div></div><div class="lbl">Tickets This Month</div></div>
+        </div>
+        <div class="table-card" style="margin-top:0;">
+          <div class="table-header"><span class="title">Incident Volume by Category (Last 30 Days)</span></div>
+          <table><thead><tr><th>Category</th><th>Total</th><th>Resolved</th><th>Pending</th><th>Avg Time</th><th>SLA %</th></tr></thead>
+          <tbody>
+            <tr><td>Network</td><td>82</td><td>78</td><td>4</td><td>1.8h</td><td><span style="color:#27ae60;font-weight:600;">97.6%</span></td></tr>
+            <tr><td>Hardware</td><td>65</td><td>60</td><td>5</td><td>4.2h</td><td><span style="color:#27ae60;font-weight:600;">92.3%</span></td></tr>
+            <tr><td>Software</td><td>94</td><td>85</td><td>9</td><td>2.1h</td><td><span style="color:#f0ad4e;font-weight:600;">90.4%</span></td></tr>
+            <tr><td>Security</td><td>18</td><td>18</td><td>0</td><td>0.9h</td><td><span style="color:#27ae60;font-weight:600;">100%</span></td></tr>
+            <tr><td>Access</td><td>53</td><td>52</td><td>1</td><td>3.5h</td><td><span style="color:#27ae60;font-weight:600;">98.1%</span></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── KNOWLEDGE ── -->
+      <div id="sn-knowledge" class="sn-view" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="font-size:15px;font-weight:700;color:#1b2f53;">Knowledge Base</div>
+          <button class="btn-green" style="font-size:12px;padding:5px 12px;" onclick="openModal('sn-article-modal')">+ New Article</button>
+        </div>
+        <div style="margin-bottom:14px;"><input type="text" placeholder="🔍 Search knowledge articles…" style="width:100%;border:1px solid #dde3ea;border-radius:4px;padding:9px 12px;font-size:13px;" /></div>
+        <div class="table-card">
+          <div class="table-header"><span class="title">Published Articles</span><span style="font-size:12px;color:#888;">124 articles</span></div>
+          <table><thead><tr><th>Article #</th><th>Category</th><th>Title</th><th>Views</th><th>Rating</th><th>Last Updated</th></tr></thead>
+          <tbody>
+            <tr><td class="inc-link">KB0001025</td><td>Network</td><td>How to reconnect to VPN after password reset</td><td style="color:#555;">2,341</td><td>⭐⭐⭐⭐⭐</td><td>Mar 14</td></tr>
+            <tr><td class="inc-link">KB0001024</td><td>Software</td><td>Clearing Salesforce cache to fix slow performance</td><td style="color:#555;">1,876</td><td>⭐⭐⭐⭐</td><td>Mar 10</td></tr>
+            <tr><td class="inc-link">KB0001023</td><td>Email</td><td>Setting up Outlook on iOS and Android devices</td><td style="color:#555;">3,102</td><td>⭐⭐⭐⭐⭐</td><td>Mar 15</td></tr>
+            <tr><td class="inc-link">KB0001022</td><td>Access</td><td>Requesting access to shared drives — step by step</td><td style="color:#555;">954</td><td>⭐⭐⭐⭐</td><td>Feb 28</td></tr>
+            <tr><td class="inc-link">KB0001021</td><td>Hardware</td><td>Replacing laptop battery — self service guide</td><td style="color:#555;">621</td><td>⭐⭐⭐</td><td>Feb 20</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── HR CASES ── -->
+      <div id="sn-hr" class="sn-view" style="display:none;">
+        <div class="stats-grid">
+          <div class="stat-card" style="border-top:3px solid #e91e63;"><div class="row"><div class="num" style="color:#e91e63;">19</div><div class="icon">👥</div></div><div class="lbl">Open HR Cases</div></div>
+          <div class="stat-card" style="border-top:3px solid #3498db;"><div class="row"><div class="num" style="color:#3498db;">8</div><div class="icon">🆕</div></div><div class="lbl">New Hires This Week</div></div>
+          <div class="stat-card" style="border-top:3px solid #f0ad4e;"><div class="row"><div class="num" style="color:#f0ad4e;">5</div><div class="icon">🚪</div></div><div class="lbl">Offboarding</div></div>
+          <div class="stat-card" style="border-top:3px solid #27ae60;"><div class="row"><div class="num" style="color:#27ae60;">11</div><div class="icon">✓</div></div><div class="lbl">Resolved This Week</div></div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><span class="title">HR Cases</span><button class="btn-green" style="font-size:12px;padding:5px 12px;" onclick="openModal('sn-hrcase-modal')">+ New Case</button></div>
+          <table><thead><tr><th>Case #</th><th>Type</th><th>Subject</th><th>Employee</th><th>State</th><th>HR Agent</th><th>Due</th></tr></thead>
+          <tbody>
+            <tr><td class="inc-link">HR0000201</td><td><span class="badge" style="background:#3498db22;color:#3498db;">Onboarding</span></td><td>New hire setup — Emily Clark (Marketing)</td><td>Emily Clark</td><td><span class="badge" style="background:#3498db22;color:#3498db;">In Progress</span></td><td>Lisa HR</td><td>Mar 17</td></tr>
+            <tr><td class="inc-link">HR0000200</td><td><span class="badge" style="background:#e91e6322;color:#e91e63;">Offboarding</span></td><td>Access revocation — James Webb resigned</td><td>James Webb</td><td><span class="badge" style="background:#f0ad4e22;color:#f0ad4e;">Pending</span></td><td>Sarah HR</td><td>Mar 15</td></tr>
+            <tr><td class="inc-link">HR0000199</td><td><span class="badge" style="background:#9b59b622;color:#9b59b6;">General</span></td><td>Payroll discrepancy — March payslip query</td><td>Tom Richards</td><td><span class="badge" style="background:#e74c3c22;color:#e74c3c;">Escalated</span></td><td>Lisa HR</td><td>Mar 16</td></tr>
+            <tr><td class="inc-link">HR0000198</td><td><span class="badge" style="background:#3498db22;color:#3498db;">Onboarding</span></td><td>New hire setup — Priya Patel (Engineering)</td><td>Priya Patel</td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Closed</span></td><td>Sarah HR</td><td>Done</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── ADMINISTRATION ── -->
+      <div id="sn-admin" class="sn-view" style="display:none;">
+        <div style="font-size:15px;font-weight:700;color:#1b2f53;margin-bottom:16px;">Administration</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="table-card">
+            <div class="table-header"><span class="title">System Properties</span></div>
+            <table><thead><tr><th>Property</th><th>Value</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td>Instance Name</td><td style="color:#555;">acme-prod</td><td><span style="color:#82b814;cursor:pointer;font-size:12px;">Edit</span></td></tr>
+              <tr><td>Instance Version</td><td style="color:#555;">Vancouver Patch 3</td><td><span style="color:#82b814;cursor:pointer;font-size:12px;">View</span></td></tr>
+              <tr><td>SMTP Server</td><td style="color:#555;">smtp.acme.com:587</td><td><span style="color:#82b814;cursor:pointer;font-size:12px;">Edit</span></td></tr>
+              <tr><td>Session Timeout</td><td style="color:#555;">30 minutes</td><td><span style="color:#82b814;cursor:pointer;font-size:12px;">Edit</span></td></tr>
+              <tr><td>MFA Required</td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Enabled</span></td><td><span style="color:#82b814;cursor:pointer;font-size:12px;">Edit</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="table-card">
+            <div class="table-header"><span class="title">Active Users</span></div>
+            <table><thead><tr><th>Name</th><th>Role</th><th>Last Login</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>IT Admin</td><td>Admin</td><td>Now</td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Active</span></td></tr>
+              <tr><td>Team</td><td>ITSM Agent</td><td>2 min ago</td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Active</span></td></tr>
+              <tr><td>User</td><td>ITSM Agent</td><td>1 hr ago</td><td><span class="badge" style="background:#27ae6022;color:#27ae60;">Active</span></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     JIRA SERVICE MANAGEMENT
+═══════════════════════════════════════════════════ -->
+<div id="jira" class="platform">
+  <div class="jira-sidebar">
+    <div class="jira-logo">
+      <div class="jira-logo-box"><span>JSM</span></div>
+      <div><div style="font-weight:700;font-size:13px;">Jira Service</div><div style="font-size:10px;opacity:.8;">Management</div></div>
+    </div>
+    <div class="jira-project">
+      <div class="lbl">Project</div>
+      <div class="name">IT Help Desk</div>
+      <div class="sub">IT Operations</div>
+    </div>
+    <div class="jira-nav">
+      <div class="jira-nav-item" data-view="jira-summary" onclick="jiraNav(this)"><span>📊</span> Summary</div>
+      <div class="jira-nav-item active" data-view="jira-queues" onclick="jiraNav(this)"><span>📥</span> Queues</div>
+      <div class="jira-nav-item" data-view="jira-reports" onclick="jiraNav(this)"><span>📈</span> Reports</div>
+      <div class="jira-nav-item" data-view="jira-catalog" onclick="jiraNav(this)"><span>🛒</span> Service catalog</div>
+      <div class="jira-nav-item" data-view="jira-knowledge" onclick="jiraNav(this)"><span>📖</span> Knowledge base</div>
+      <div class="jira-nav-item" data-view="jira-assets" onclick="jiraNav(this)"><span>🗃</span> Assets</div>
+      <div class="jira-nav-item" data-view="jira-oncall" onclick="jiraNav(this)"><span>📅</span> On-call</div>
+      <div class="jira-nav-item" data-view="jira-settings" onclick="jiraNav(this)"><span>⚙</span> Project settings</div>
+    </div>
+    <div class="jira-user">
+      <div class="jira-avatar">TM</div>
+      <div><div style="font-size:12px;font-weight:600;">Team</div><div style="font-size:11px;opacity:.7;">Agent</div></div>
+    </div>
+  </div>
+
+  <div class="jira-main">
+    <div class="jira-topbar">
+      <div><h1>Queues</h1><p>IT Help Desk · Jira Service Management</p></div>
+      <button class="btn-blue" onclick="openModal('jira-issue-modal')">+ Create issue</button>
+    </div>
+    <div class="jira-statsbar">
+      <div class="jira-stat"><div class="dot" style="background:#0052cc;"></div><span class="val">28</span><span class="lbl">Open</span></div>
+      <div class="jira-stat"><div class="dot" style="background:#36b37e;"></div><span class="val">14</span><span class="lbl">In Progress</span></div>
+      <div class="jira-stat"><div class="dot" style="background:#ff5630;"></div><span class="val">2</span><span class="lbl">SLA Breached</span></div>
+      <div class="jira-stat"><div class="dot" style="background:#6554c0;"></div><span class="val">11</span><span class="lbl">Resolved Today</span></div>
+      <div class="jira-stat"><div class="dot" style="background:#ffab00;"></div><span class="val">5</span><span class="lbl">Waiting for customer</span></div>
+    </div>
+    <div class="jira-body">
+      <div class="jira-queue-nav">
+        <div class="section-lbl">Views</div>
+        <div class="jira-queue-item active" onclick="jiraQueue(this)">Your queues</div>
+        <div class="jira-queue-item" onclick="jiraQueue(this)">Unassigned</div>
+        <div class="jira-queue-item" onclick="jiraQueue(this)">Waiting for support</div>
+        <div class="jira-queue-item" onclick="jiraQueue(this)">Pending approval</div>
+        <div class="jira-queue-item" onclick="jiraQueue(this)">Escalated</div>
+        <div class="jira-queue-item" onclick="jiraQueue(this)">Resolved</div>
+        <div class="jira-queue-item" onclick="jiraQueue(this)">All open issues</div>
+      </div>
+      <div class="jira-table-area">
+
+        <!-- SUMMARY -->
+        <div id="jira-summary" class="jira-view" style="display:none;">
+          <div style="font-size:16px;font-weight:700;color:#172b4d;margin-bottom:16px;">Project Summary — IT Help Desk</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+            <div style="background:#fff;border-radius:6px;padding:16px;border:1px solid #dfe1e6;"><div style="font-size:26px;font-weight:800;color:#0052cc;">28</div><div style="font-size:12px;color:#5e6c84;margin-top:3px;">Open Issues</div></div>
+            <div style="background:#fff;border-radius:6px;padding:16px;border:1px solid #dfe1e6;"><div style="font-size:26px;font-weight:800;color:#36b37e;">14</div><div style="font-size:12px;color:#5e6c84;margin-top:3px;">In Progress</div></div>
+            <div style="background:#fff;border-radius:6px;padding:16px;border:1px solid #dfe1e6;"><div style="font-size:26px;font-weight:800;color:#ff5630;">2</div><div style="font-size:12px;color:#5e6c84;margin-top:3px;">SLA Breached</div></div>
+            <div style="background:#fff;border-radius:6px;padding:16px;border:1px solid #dfe1e6;"><div style="font-size:26px;font-weight:800;color:#6554c0;">11</div><div style="font-size:12px;color:#5e6c84;margin-top:3px;">Resolved Today</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:#fff;border-radius:6px;border:1px solid #dfe1e6;overflow:hidden;">
+              <div style="padding:12px 16px;border-bottom:1px solid #dfe1e6;font-weight:700;font-size:13px;color:#172b4d;">Issues by Type</div>
+              <table><thead><tr><th>Type</th><th>Open</th><th>In Progress</th><th>Resolved</th></tr></thead><tbody>
+                <tr><td>Incident</td><td style="color:#e74c3c;font-weight:600;">12</td><td style="color:#3498db;font-weight:600;">7</td><td style="color:#27ae60;font-weight:600;">34</td></tr>
+                <tr><td>Service Request</td><td style="color:#e74c3c;font-weight:600;">9</td><td style="color:#3498db;font-weight:600;">5</td><td style="color:#27ae60;font-weight:600;">28</td></tr>
+                <tr><td>Change Request</td><td style="color:#e74c3c;font-weight:600;">4</td><td style="color:#3498db;font-weight:600;">2</td><td style="color:#27ae60;font-weight:600;">11</td></tr>
+                <tr><td>Problem</td><td style="color:#e74c3c;font-weight:600;">3</td><td style="color:#3498db;font-weight:600;">0</td><td style="color:#27ae60;font-weight:600;">7</td></tr>
+              </tbody></table>
+            </div>
+            <div style="background:#fff;border-radius:6px;border:1px solid #dfe1e6;overflow:hidden;">
+              <div style="padding:12px 16px;border-bottom:1px solid #dfe1e6;font-weight:700;font-size:13px;color:#172b4d;">Team Workload</div>
+              <table><thead><tr><th>Agent</th><th>Assigned</th><th>Resolved (7d)</th></tr></thead><tbody>
+                <tr><td>Alice Johnson</td><td style="font-weight:600;">8</td><td style="color:#27ae60;font-weight:600;">12</td></tr>
+                <tr><td>Bob Martinez</td><td style="font-weight:600;">6</td><td style="color:#27ae60;font-weight:600;">9</td></tr>
+                <tr><td>Clara Singh</td><td style="font-weight:600;">5</td><td style="color:#27ae60;font-weight:600;">14</td></tr>
+                <tr><td>David Kim</td><td style="font-weight:600;">9</td><td style="color:#27ae60;font-weight:600;">7</td></tr>
+              </tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUEUES -->
+        <div id="jira-queues" class="jira-view">
+          <div class="jira-table-wrap">
+            <table class="jira-table">
+              <thead><tr><th>Type</th><th>Key</th><th>Priority</th><th>Summary</th><th>Requester</th><th>Status</th><th>SLA</th><th>Created</th></tr></thead>
+              <tbody id="jira-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- REPORTS -->
+        <div id="jira-reports" class="jira-view" style="display:none;">
+          <div style="font-size:15px;font-weight:700;color:#172b4d;margin-bottom:16px;">Reports</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+            <div style="background:#fff;border-radius:6px;padding:16px;border:1px solid #dfe1e6;"><div style="font-size:26px;font-weight:800;color:#0052cc;">3.2h</div><div style="font-size:12px;color:#5e6c84;margin-top:3px;">Avg First Response</div></div>
+            <div style="background:#fff;border-radius:6px;padding:16px;border:1px solid #dfe1e6;"><div style="font-size:26px;font-weight:800;color:#36b37e;">94%</div><div style="font-size:12px;color:#5e6c84;margin-top:3px;">SLA Met (MTD)</div></div>
+            <div style="background:#fff;border-radius:6px;padding:16px;border:1px solid #dfe1e6;"><div style="font-size:26px;font-weight:800;color:#6554c0;">4.8</div><div style="font-size:12px;color:#5e6c84;margin-top:3px;">Customer Satisfaction</div></div>
+            <div style="background:#fff;border-radius:6px;padding:16px;border:1px solid #dfe1e6;"><div style="font-size:26px;font-weight:800;color:#ff5630;">6</div><div style="font-size:12px;color:#5e6c84;margin-top:3px;">Escalations (MTD)</div></div>
+          </div>
+          <div style="background:#fff;border-radius:6px;border:1px solid #dfe1e6;overflow:hidden;">
+            <div style="padding:12px 16px;border-bottom:1px solid #dfe1e6;font-weight:700;font-size:13px;color:#172b4d;">SLA Performance by Issue Type</div>
+            <table class="jira-table"><thead><tr><th>Issue Type</th><th>Total</th><th>Met SLA</th><th>Breached</th><th>SLA %</th><th>Avg Resolution</th></tr></thead><tbody>
+              <tr><td>Incident</td><td>53</td><td>50</td><td><span style="color:#ff5630;font-weight:600;">3</span></td><td><span style="color:#36b37e;font-weight:600;">94.3%</span></td><td>2.1h</td></tr>
+              <tr><td>Service Request</td><td>42</td><td>42</td><td><span style="color:#36b37e;font-weight:600;">0</span></td><td><span style="color:#36b37e;font-weight:600;">100%</span></td><td>5.4h</td></tr>
+              <tr><td>Change Request</td><td>17</td><td>15</td><td><span style="color:#ff5630;font-weight:600;">2</span></td><td><span style="color:#ffab00;font-weight:600;">88.2%</span></td><td>18.3h</td></tr>
+              <tr><td>Problem</td><td>10</td><td>10</td><td><span style="color:#36b37e;font-weight:600;">0</span></td><td><span style="color:#36b37e;font-weight:600;">100%</span></td><td>26.7h</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <!-- SERVICE CATALOG -->
+        <div id="jira-catalog" class="jira-view" style="display:none;">
+          <div style="font-size:15px;font-weight:700;color:#172b4d;margin-bottom:16px;">Service Catalog</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+            <div style="background:#fff;border-radius:6px;padding:18px;border:1px solid #dfe1e6;cursor:pointer;" onmouseover="this.style.borderColor='#0052cc'" onmouseout="this.style.borderColor='#dfe1e6'"><div style="font-size:26px;margin-bottom:8px;">💻</div><div style="font-weight:700;font-size:14px;color:#172b4d;">Hardware Request</div><div style="font-size:12px;color:#5e6c84;margin-top:4px;">Laptop, monitor, keyboard & accessories</div></div>
+            <div style="background:#fff;border-radius:6px;padding:18px;border:1px solid #dfe1e6;cursor:pointer;" onmouseover="this.style.borderColor='#0052cc'" onmouseout="this.style.borderColor='#dfe1e6'"><div style="font-size:26px;margin-bottom:8px;">🔑</div><div style="font-weight:700;font-size:14px;color:#172b4d;">Access Request</div><div style="font-size:12px;color:#5e6c84;margin-top:4px;">System, application & resource access</div></div>
+            <div style="background:#fff;border-radius:6px;padding:18px;border:1px solid #dfe1e6;cursor:pointer;" onmouseover="this.style.borderColor='#0052cc'" onmouseout="this.style.borderColor='#dfe1e6'"><div style="font-size:26px;margin-bottom:8px;">🌐</div><div style="font-weight:700;font-size:14px;color:#172b4d;">Network & VPN</div><div style="font-size:12px;color:#5e6c84;margin-top:4px;">Remote access, VPN, connectivity setup</div></div>
+            <div style="background:#fff;border-radius:6px;padding:18px;border:1px solid #dfe1e6;cursor:pointer;" onmouseover="this.style.borderColor='#0052cc'" onmouseout="this.style.borderColor='#dfe1e6'"><div style="font-size:26px;margin-bottom:8px;">☁</div><div style="font-weight:700;font-size:14px;color:#172b4d;">Cloud Services</div><div style="font-size:12px;color:#5e6c84;margin-top:4px;">Microsoft 365, Google Workspace, AWS</div></div>
+            <div style="background:#fff;border-radius:6px;padding:18px;border:1px solid #dfe1e6;cursor:pointer;" onmouseover="this.style.borderColor='#0052cc'" onmouseout="this.style.borderColor='#dfe1e6'"><div style="font-size:26px;margin-bottom:8px;">📱</div><div style="font-weight:700;font-size:14px;color:#172b4d;">Mobile Device</div><div style="font-size:12px;color:#5e6c84;margin-top:4px;">Phone and tablet enrollment & setup</div></div>
+            <div style="background:#fff;border-radius:6px;padding:18px;border:1px solid #dfe1e6;cursor:pointer;" onmouseover="this.style.borderColor='#0052cc'" onmouseout="this.style.borderColor='#dfe1e6'"><div style="font-size:26px;margin-bottom:8px;">🖨</div><div style="font-weight:700;font-size:14px;color:#172b4d;">Printer & Peripherals</div><div style="font-size:12px;color:#5e6c84;margin-top:4px;">Install, configure, order supplies</div></div>
+          </div>
+        </div>
+
+        <!-- KNOWLEDGE BASE -->
+        <div id="jira-knowledge" class="jira-view" style="display:none;">
+          <div style="font-size:15px;font-weight:700;color:#172b4d;margin-bottom:12px;">Knowledge Base</div>
+          <div style="margin-bottom:14px;"><input type="text" placeholder="🔍 Search articles…" style="width:100%;border:1px solid #dfe1e6;border-radius:4px;padding:9px 12px;font-size:13px;color:#172b4d;" /></div>
+          <div style="background:#fff;border-radius:6px;border:1px solid #dfe1e6;overflow:hidden;">
+            <table class="jira-table"><thead><tr><th>Article</th><th>Category</th><th>Title</th><th>Views</th><th>Helpful</th><th>Last Updated</th></tr></thead><tbody>
+              <tr><td style="color:#0052cc;font-weight:600;">KB-0142</td><td><span style="background:#deebff;color:#0052cc;border-radius:3px;padding:2px 7px;font-size:11px;font-weight:600;">Network</span></td><td>How to connect to Jira via VPN remotely</td><td>1,820</td><td><span style="color:#36b37e;font-weight:600;">96%</span></td><td>Mar 14</td></tr>
+              <tr><td style="color:#0052cc;font-weight:600;">KB-0141</td><td><span style="background:#e3fcef;color:#006644;border-radius:3px;padding:2px 7px;font-size:11px;font-weight:600;">Software</span></td><td>Resetting your Jira Service Management password</td><td>3,410</td><td><span style="color:#36b37e;font-weight:600;">99%</span></td><td>Mar 10</td></tr>
+              <tr><td style="color:#0052cc;font-weight:600;">KB-0140</td><td><span style="background:#ede9fe;color:#6554c0;border-radius:3px;padding:2px 7px;font-size:11px;font-weight:600;">Access</span></td><td>Requesting Confluence space admin access</td><td>740</td><td><span style="color:#36b37e;font-weight:600;">88%</span></td><td>Mar 8</td></tr>
+              <tr><td style="color:#0052cc;font-weight:600;">KB-0139</td><td><span style="background:#deebff;color:#0052cc;border-radius:3px;padding:2px 7px;font-size:11px;font-weight:600;">Network</span></td><td>Troubleshooting Confluence page load timeouts</td><td>512</td><td><span style="color:#ffab00;font-weight:600;">75%</span></td><td>Feb 28</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <!-- ASSETS -->
+        <div id="jira-assets" class="jira-view" style="display:none;">
+          <div style="font-size:15px;font-weight:700;color:#172b4d;margin-bottom:16px;">Assets</div>
+          <div style="background:#fff;border-radius:6px;border:1px solid #dfe1e6;overflow:hidden;">
+            <div style="padding:12px 16px;border-bottom:1px solid #dfe1e6;display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:700;font-size:13px;color:#172b4d;">Asset Inventory</span><button class="btn-blue" style="font-size:12px;padding:5px 12px;" onclick="openModal('jira-asset-modal')">+ Add Asset</button></div>
+            <table class="jira-table"><thead><tr><th>Asset ID</th><th>Name</th><th>Type</th><th>Status</th><th>Assigned To</th><th>Purchase Date</th><th>Warranty</th></tr></thead><tbody>
+              <tr><td style="color:#0052cc;font-weight:600;">AST-1001</td><td>Dell XPS 15 Laptop</td><td>Laptop</td><td><span style="background:#e3fcef;color:#006644;border-radius:3px;padding:2px 7px;font-size:11px;font-weight:600;">In Use</span></td><td>Alice Johnson</td><td>Jan 2023</td><td style="color:#27ae60;">Dec 2025</td></tr>
+              <tr><td style="color:#0052cc;font-weight:600;">AST-1002</td><td>Cisco IP Phone 8841</td><td>Phone</td><td><span style="background:#e3fcef;color:#006644;border-radius:3px;padding:2px 7px;font-size:11px;font-weight:600;">In Use</span></td><td>Bob Martinez</td><td>Mar 2022</td><td style="color:#27ae60;">Mar 2025</td></tr>
+              <tr><td style="color:#0052cc;font-weight:600;">AST-1003</td><td>HP LaserJet Pro M404</td><td>Printer</td><td><span style="background:#fffae6;color:#ff8b00;border-radius:3px;padding:2px 7px;font-size:11px;font-weight:600;">Maintenance</span></td><td>IT Ops</td><td>May 2021</td><td style="color:#ff5630;">Expired</td></tr>
+              <tr><td style="color:#0052cc;font-weight:600;">AST-1004</td><td>MacBook Pro 14" M3</td><td>Laptop</td><td><span style="background:#e3fcef;color:#006644;border-radius:3px;padding:2px 7px;font-size:11px;font-weight:600;">In Use</span></td><td>Clara Singh</td><td>Nov 2023</td><td style="color:#27ae60;">Nov 2026</td></tr>
+              <tr><td style="color:#0052cc;font-weight:600;">AST-1005</td><td>Cisco Catalyst 2960</td><td>Switch</td><td><span style="background:#ffebe6;color:#bf2600;border-radius:3px;padding:2px 7px;font-size:11px;font-weight:600;">Retired</span></td><td>—</td><td>Apr 2015</td><td style="color:#ff5630;">Expired</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <!-- ON-CALL -->
+        <div id="jira-oncall" class="jira-view" style="display:none;">
+          <div style="font-size:15px;font-weight:700;color:#172b4d;margin-bottom:16px;">On-Call Schedule — Week of Mar 15, 2026</div>
+          <div style="background:#fff;border-radius:6px;border:1px solid #dfe1e6;overflow:hidden;">
+            <table class="jira-table"><thead><tr><th>Agent</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th></tr></thead><tbody>
+              <tr><td style="font-weight:600;">Alice Johnson</td><td style="background:#deebff;color:#0052cc;font-weight:600;text-align:center;">Primary</td><td style="background:#deebff;color:#0052cc;font-weight:600;text-align:center;">Primary</td><td style="color:#aaa;text-align:center;">—</td><td style="color:#aaa;text-align:center;">—</td><td style="background:#e3fcef;color:#006644;font-weight:600;text-align:center;">Backup</td><td style="color:#aaa;text-align:center;">—</td><td style="color:#aaa;text-align:center;">—</td></tr>
+              <tr><td style="font-weight:600;">Bob Martinez</td><td style="color:#aaa;text-align:center;">—</td><td style="background:#e3fcef;color:#006644;font-weight:600;text-align:center;">Backup</td><td style="background:#deebff;color:#0052cc;font-weight:600;text-align:center;">Primary</td><td style="background:#deebff;color:#0052cc;font-weight:600;text-align:center;">Primary</td><td style="color:#aaa;text-align:center;">—</td><td style="background:#deebff;color:#0052cc;font-weight:600;text-align:center;">Primary</td><td style="color:#aaa;text-align:center;">—</td></tr>
+              <tr><td style="font-weight:600;">Clara Singh</td><td style="background:#e3fcef;color:#006644;font-weight:600;text-align:center;">Backup</td><td style="color:#aaa;text-align:center;">—</td><td style="background:#e3fcef;color:#006644;font-weight:600;text-align:center;">Backup</td><td style="color:#aaa;text-align:center;">—</td><td style="background:#deebff;color:#0052cc;font-weight:600;text-align:center;">Primary</td><td style="color:#aaa;text-align:center;">—</td><td style="background:#deebff;color:#0052cc;font-weight:600;text-align:center;">Primary</td></tr>
+              <tr><td style="font-weight:600;">David Kim</td><td style="color:#aaa;text-align:center;">—</td><td style="color:#aaa;text-align:center;">—</td><td style="color:#aaa;text-align:center;">—</td><td style="background:#e3fcef;color:#006644;font-weight:600;text-align:center;">Backup</td><td style="color:#aaa;text-align:center;">—</td><td style="background:#e3fcef;color:#006644;font-weight:600;text-align:center;">Backup</td><td style="background:#e3fcef;color:#006644;font-weight:600;text-align:center;">Backup</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <!-- PROJECT SETTINGS -->
+        <div id="jira-settings" class="jira-view" style="display:none;">
+          <div style="font-size:15px;font-weight:700;color:#172b4d;margin-bottom:16px;">Project Settings</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:#fff;border-radius:6px;border:1px solid #dfe1e6;padding:20px;">
+              <div style="font-weight:700;font-size:13px;color:#172b4d;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #dfe1e6;">General</div>
+              <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;">
+                <div style="display:flex;justify-content:space-between;"><span style="color:#5e6c84;">Project Name</span><span style="font-weight:600;">IT Help Desk</span></div>
+                <div style="display:flex;justify-content:space-between;"><span style="color:#5e6c84;">Project Key</span><span style="font-weight:600;color:#0052cc;">ITSD</span></div>
+                <div style="display:flex;justify-content:space-between;"><span style="color:#5e6c84;">Project Type</span><span style="font-weight:600;">Service Management</span></div>
+                <div style="display:flex;justify-content:space-between;"><span style="color:#5e6c84;">Project Lead</span><span style="font-weight:600;">Team User</span></div>
+                <div style="display:flex;justify-content:space-between;"><span style="color:#5e6c84;">Portal Name</span><span style="font-weight:600;">IT Support Portal</span></div>
+              </div>
+            </div>
+            <div style="background:#fff;border-radius:6px;border:1px solid #dfe1e6;padding:20px;">
+              <div style="font-weight:700;font-size:13px;color:#172b4d;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #dfe1e6;">Team Members</div>
+              <table style="width:100%;font-size:13px;border-collapse:collapse;"><thead><tr><th style="padding:6px 0;color:#5e6c84;font-size:11px;text-align:left;border-bottom:1px solid #dfe1e6;">Name</th><th style="padding:6px 0;color:#5e6c84;font-size:11px;text-align:left;border-bottom:1px solid #dfe1e6;">Role</th></tr></thead><tbody>
+                <tr><td style="padding:7px 0;">Alice Johnson</td><td><span style="background:#deebff;color:#0052cc;border-radius:3px;padding:2px 7px;font-size:11px;">Service Desk Agent</span></td></tr>
+                <tr><td style="padding:7px 0;">Bob Martinez</td><td><span style="background:#deebff;color:#0052cc;border-radius:3px;padding:2px 7px;font-size:11px;">Service Desk Agent</span></td></tr>
+                <tr><td style="padding:7px 0;">Clara Singh</td><td><span style="background:#e3fcef;color:#006644;border-radius:3px;padding:2px 7px;font-size:11px;">Team Lead</span></td></tr>
+                <tr><td style="padding:7px 0;">David Kim</td><td><span style="background:#ede9fe;color:#6554c0;border-radius:3px;padding:2px 7px;font-size:11px;">Admin</span></td></tr>
+              </tbody></table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ZENDESK
+═══════════════════════════════════════════════════ -->
+<div id="zendesk" class="platform">
+  <div class="zd-sidebar">
+    <div class="zd-logo">Z</div>
+    <div class="zd-icon active" title="Views" data-view="zd-views-view" onclick="zdIcon(this)">📋</div>
+    <div class="zd-icon" title="Search" data-view="zd-search-view" onclick="zdIcon(this)">🔍</div>
+    <div class="zd-icon" title="Tickets" data-view="zd-tickets-view" onclick="zdIcon(this)">🎫</div>
+    <div class="zd-icon" title="Reporting" data-view="zd-reporting-view" onclick="zdIcon(this)">📊</div>
+    <div class="zd-icon" title="Customers" data-view="zd-customers-view" onclick="zdIcon(this)">👥</div>
+    <div class="zd-icon" title="Knowledge" data-view="zd-knowledge-view" onclick="zdIcon(this)">📚</div>
+    <div class="zd-spacer"></div>
+    <div class="zd-icon" title="Settings" data-view="zd-settings-view" onclick="zdIcon(this)">⚙</div>
+    <div class="zd-icon" title="Apps" data-view="zd-apps-view" onclick="zdIcon(this)">🧩</div>
+    <div style="width:32px;height:32px;border-radius:50%;background:#03b48a;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;margin-top:8px;">U</div>
+  </div>
+
+  <!-- ── VIEWS (default) ── -->
+  <div id="zd-views-view" class="zd-section-view" style="display:flex;flex:1;overflow:hidden;">
+    <div class="zd-left">
+      <div class="zd-left-header"><h3>Views</h3><button class="zd-btn-sm" onclick="openModal('zd-view-modal')">+ New</button></div>
+      <div class="zd-search"><input type="text" placeholder="🔍 Search tickets…" /></div>
+      <div class="zd-views">
+        <div class="zd-view-group">
+          <div class="zd-view-group-label">Your views</div>
+          <div class="zd-view-item active" onclick="zdView(this)"><span>All open tickets</span><span class="zd-count">47</span></div>
+          <div class="zd-view-item" onclick="zdView(this)"><span>Unassigned</span><span class="zd-count">12</span></div>
+          <div class="zd-view-item" onclick="zdView(this)"><span>Recently updated</span><span class="zd-count">8</span></div>
+          <div class="zd-view-item" onclick="zdView(this)"><span>My tickets</span><span class="zd-count">15</span></div>
+        </div>
+        <div class="zd-view-group">
+          <div class="zd-view-group-label">Shared views</div>
+          <div class="zd-view-item" onclick="zdView(this)"><span>High priority</span><span class="zd-count">6</span></div>
+          <div class="zd-view-item" onclick="zdView(this)"><span>Pending review</span><span class="zd-count">4</span></div>
+          <div class="zd-view-item" onclick="zdView(this)"><span>Solved today</span><span class="zd-count">18</span></div>
+          <div class="zd-view-item" onclick="zdView(this)"><span>VIP customers</span><span class="zd-count">3</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="zd-main">
+      <div class="zd-topbar">
+        <h2>All open tickets</h2>
+        <div class="zd-actions">
+          <select style="border:1px solid #e5e7eb;border-radius:5px;padding:6px 10px;font-size:12px;color:#374151;"><option>Sort: Updated ↓</option><option>Sort: Priority ↓</option><option>Sort: Created ↓</option></select>
+          <button style="background:#03b48a;color:#fff;border:none;border-radius:5px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:600;" onclick="openModal('zd-ticket-modal')">+ New ticket</button>
+        </div>
+      </div>
+      <div class="zd-content">
+        <div class="zd-ticket-list">
+          <table><thead><tr><th>ID</th><th>Status</th><th>Priority</th><th>Subject</th><th>Requester</th><th>Assignee</th><th>Group</th><th>Updated</th></tr></thead>
+          <tbody id="zd-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SEARCH ── -->
+  <div id="zd-search-view" class="zd-section-view" style="display:none;flex:1;padding:24px;overflow:auto;background:#f3f4f6;">
+    <div style="font-size:18px;font-weight:700;color:#1f2937;margin-bottom:16px;">Search</div>
+    <input type="text" placeholder="🔍 Search tickets, users, articles…" style="width:100%;max-width:600px;border:2px solid #d1d5db;border-radius:8px;padding:12px 16px;font-size:15px;display:block;margin-bottom:24px;" />
+    <div style="font-size:13px;color:#6b7280;font-weight:600;margin-bottom:10px;">RECENT SEARCHES</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="background:#fff;border-radius:6px;padding:10px 14px;border:1px solid #e5e7eb;cursor:pointer;font-size:13px;color:#374151;">password reset not working</div>
+      <div style="background:#fff;border-radius:6px;padding:10px 14px;border:1px solid #e5e7eb;cursor:pointer;font-size:13px;color:#374151;">VPN connectivity issues</div>
+      <div style="background:#fff;border-radius:6px;padding:10px 14px;border:1px solid #e5e7eb;cursor:pointer;font-size:13px;color:#374151;">billing inquiry Q1</div>
+    </div>
+  </div>
+
+  <!-- ── TICKETS ── -->
+  <div id="zd-tickets-view" class="zd-section-view" style="display:none;flex:1;padding:24px;overflow:auto;background:#f3f4f6;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:18px;font-weight:700;color:#1f2937;">Ticket Management</div>
+      <button style="background:#03b48a;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:600;" onclick="openModal('zd-ticket-modal')">+ New Ticket</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+      <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;"><div style="font-size:26px;font-weight:800;color:#03b48a;">47</div><div style="font-size:12px;color:#6b7280;margin-top:3px;">Open</div></div>
+      <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;"><div style="font-size:26px;font-weight:800;color:#f59e0b;">18</div><div style="font-size:12px;color:#6b7280;margin-top:3px;">Pending</div></div>
+      <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;"><div style="font-size:26px;font-weight:800;color:#3b82f6;">12</div><div style="font-size:12px;color:#6b7280;margin-top:3px;">On Hold</div></div>
+      <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;"><div style="font-size:26px;font-weight:800;color:#6b7280;">94</div><div style="font-size:12px;color:#6b7280;margin-top:3px;">Solved (MTD)</div></div>
+    </div>
+    <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;"><thead style="background:#f9fafb;"><tr><th style="padding:10px 14px;text-align:left;color:#6b7280;font-weight:600;font-size:11px;border-bottom:1px solid #e5e7eb;">ID</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-weight:600;font-size:11px;border-bottom:1px solid #e5e7eb;">Subject</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-weight:600;font-size:11px;border-bottom:1px solid #e5e7eb;">Status</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-weight:600;font-size:11px;border-bottom:1px solid #e5e7eb;">Priority</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-weight:600;font-size:11px;border-bottom:1px solid #e5e7eb;">Assignee</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;color:#03b48a;font-weight:600;">#80241</td><td style="padding:10px 14px;color:#374151;">Cannot access company email on mobile</td><td style="padding:10px 14px;"><span style="background:#d1fae5;color:#065f46;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;">Open</span></td><td style="padding:10px 14px;"><span style="background:#fee2e2;color:#991b1b;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;">Urgent</span></td><td style="padding:10px 14px;color:#374151;">Sarah Agent</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;color:#03b48a;font-weight:600;">#80240</td><td style="padding:10px 14px;color:#374151;">Billing charge discrepancy — Feb invoice</td><td style="padding:10px 14px;"><span style="background:#fef3c7;color:#92400e;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;">Pending</span></td><td style="padding:10px 14px;"><span style="background:#fee2e2;color:#991b1b;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;">High</span></td><td style="padding:10px 14px;color:#374151;">Tom Agent</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;color:#03b48a;font-weight:600;">#80239</td><td style="padding:10px 14px;color:#374151;">Feature request — bulk export tickets to CSV</td><td style="padding:10px 14px;"><span style="background:#dbeafe;color:#1e40af;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;">On Hold</span></td><td style="padding:10px 14px;"><span style="background:#f3f4f6;color:#6b7280;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;">Low</span></td><td style="padding:10px 14px;color:#374151;">Alice Agent</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- ── REPORTING ── -->
+  <div id="zd-reporting-view" class="zd-section-view" style="display:none;flex:1;padding:24px;overflow:auto;background:#f3f4f6;">
+    <div style="font-size:18px;font-weight:700;color:#1f2937;margin-bottom:16px;">Reporting</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+      <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;"><div style="font-size:26px;font-weight:800;color:#03b48a;">4.8</div><div style="font-size:12px;color:#6b7280;margin-top:3px;">CSAT Score</div></div>
+      <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;"><div style="font-size:26px;font-weight:800;color:#3b82f6;">1.9h</div><div style="font-size:12px;color:#6b7280;margin-top:3px;">First Reply Time</div></div>
+      <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;"><div style="font-size:26px;font-weight:800;color:#8b5cf6;">97%</div><div style="font-size:12px;color:#6b7280;margin-top:3px;">Resolution Rate</div></div>
+      <div style="background:#fff;border-radius:8px;padding:16px;border:1px solid #e5e7eb;"><div style="font-size:26px;font-weight:800;color:#f59e0b;">312</div><div style="font-size:12px;color:#6b7280;margin-top:3px;">Tickets (MTD)</div></div>
+    </div>
+    <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden;">
+      <div style="padding:12px 16px;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:13px;color:#1f2937;">Volume by Channel (Last 30 Days)</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;"><thead style="background:#f9fafb;"><tr><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Channel</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Tickets</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Resolved</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Avg Time</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">CSAT</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;">Email</td><td style="padding:10px 14px;font-weight:600;">148</td><td style="padding:10px 14px;color:#03b48a;font-weight:600;">141</td><td style="padding:10px 14px;">2.4h</td><td style="padding:10px 14px;color:#03b48a;font-weight:600;">4.9</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;">Chat</td><td style="padding:10px 14px;font-weight:600;">87</td><td style="padding:10px 14px;color:#03b48a;font-weight:600;">84</td><td style="padding:10px 14px;">0.6h</td><td style="padding:10px 14px;color:#03b48a;font-weight:600;">4.7</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;">Phone</td><td style="padding:10px 14px;font-weight:600;">52</td><td style="padding:10px 14px;color:#03b48a;font-weight:600;">50</td><td style="padding:10px 14px;">1.1h</td><td style="padding:10px 14px;color:#f59e0b;font-weight:600;">4.5</td></tr>
+        <tr><td style="padding:10px 14px;">Web Form</td><td style="padding:10px 14px;font-weight:600;">25</td><td style="padding:10px 14px;color:#03b48a;font-weight:600;">22</td><td style="padding:10px 14px;">3.8h</td><td style="padding:10px 14px;color:#f59e0b;font-weight:600;">4.3</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- ── CUSTOMERS ── -->
+  <div id="zd-customers-view" class="zd-section-view" style="display:none;flex:1;padding:24px;overflow:auto;background:#f3f4f6;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:18px;font-weight:700;color:#1f2937;">Customers</div>
+      <button style="background:#03b48a;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:600;" onclick="openModal('zd-customer-modal')">+ Add Customer</button>
+    </div>
+    <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;"><thead style="background:#f9fafb;"><tr><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Name</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Email</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Organization</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Tickets</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Last Activity</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;color:#03b48a;font-weight:600;cursor:pointer;">Emily Torres</td><td style="padding:10px 14px;color:#6b7280;">emily.t@acme.com</td><td style="padding:10px 14px;">Acme Corp</td><td style="padding:10px 14px;font-weight:600;">8</td><td style="padding:10px 14px;color:#6b7280;">Mar 15</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;color:#03b48a;font-weight:600;cursor:pointer;">James Wilson</td><td style="padding:10px 14px;color:#6b7280;">jwilson@globex.com</td><td style="padding:10px 14px;">Globex Inc</td><td style="padding:10px 14px;font-weight:600;">3</td><td style="padding:10px 14px;color:#6b7280;">Mar 14</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;color:#03b48a;font-weight:600;cursor:pointer;">Priya Sharma</td><td style="padding:10px 14px;color:#6b7280;">priya@initech.com</td><td style="padding:10px 14px;">Initech</td><td style="padding:10px 14px;font-weight:600;">15</td><td style="padding:10px 14px;color:#6b7280;">Mar 15</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;color:#03b48a;font-weight:600;cursor:pointer;">Carlos Mendez</td><td style="padding:10px 14px;color:#6b7280;">c.mendez@umbrella.com</td><td style="padding:10px 14px;">Umbrella Corp</td><td style="padding:10px 14px;font-weight:600;">2</td><td style="padding:10px 14px;color:#6b7280;">Mar 12</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- ── KNOWLEDGE ── -->
+  <div id="zd-knowledge-view" class="zd-section-view" style="display:none;flex:1;padding:24px;overflow:auto;background:#f3f4f6;">
+    <div style="font-size:18px;font-weight:700;color:#1f2937;margin-bottom:12px;">Knowledge Base</div>
+    <div style="margin-bottom:16px;"><input type="text" placeholder="🔍 Search help center…" style="width:100%;max-width:500px;border:1px solid #d1d5db;border-radius:6px;padding:9px 14px;font-size:13px;" /></div>
+    <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;"><thead style="background:#f9fafb;"><tr><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Article</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Section</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Views</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Rating</th><th style="padding:10px 14px;text-align:left;color:#6b7280;font-size:11px;font-weight:600;border-bottom:1px solid #e5e7eb;">Updated</th></tr></thead>
+      <tbody>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;color:#03b48a;font-weight:600;cursor:pointer;">How to reset your password</td><td style="padding:10px 14px;color:#6b7280;">Account</td><td style="padding:10px 14px;">5,210</td><td style="padding:10px 14px;">⭐⭐⭐⭐⭐</td><td style="padding:10px 14px;color:#6b7280;">Mar 14</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;color:#03b48a;font-weight:600;cursor:pointer;">Understanding your invoice</td><td style="padding:10px 14px;color:#6b7280;">Billing</td><td style="padding:10px 14px;">3,820</td><td style="padding:10px 14px;">⭐⭐⭐⭐</td><td style="padding:10px 14px;color:#6b7280;">Mar 10</td></tr>
+        <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 14px;color:#03b48a;font-weight:600;cursor:pointer;">Getting started with Zendesk Chat</td><td style="padding:10px 14px;color:#6b7280;">Integrations</td><td style="padding:10px 14px;">2,115</td><td style="padding:10px 14px;">⭐⭐⭐⭐⭐</td><td style="padding:10px 14px;color:#6b7280;">Mar 8</td></tr>
+        <tr><td style="padding:10px 14px;color:#03b48a;font-weight:600;cursor:pointer;">Setting up two-factor authentication</td><td style="padding:10px 14px;color:#6b7280;">Security</td><td style="padding:10px 14px;">1,780</td><td style="padding:10px 14px;">⭐⭐⭐⭐</td><td style="padding:10px 14px;color:#6b7280;">Mar 5</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div id="zd-settings-view" class="zd-section-view" style="display:none;flex:1;padding:24px;overflow:auto;background:#f3f4f6;">
+    <div style="font-size:18px;font-weight:700;color:#1f2937;margin-bottom:16px;">Settings</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:20px;">
+        <div style="font-weight:700;font-size:13px;color:#1f2937;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e5e7eb;">Account</div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:#6b7280;">Subdomain</span><span style="font-weight:600;">acme.zendesk.com</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#6b7280;">Plan</span><span style="font-weight:600;color:#03b48a;">Suite Professional</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#6b7280;">Agents Used</span><span style="font-weight:600;">12 / 25</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#6b7280;">Language</span><span style="font-weight:600;">English (US)</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#6b7280;">Time Zone</span><span style="font-weight:600;">UTC-5 (EST)</span></div>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:20px;">
+        <div style="font-weight:700;font-size:13px;color:#1f2937;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e5e7eb;">Notifications</div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#6b7280;">Email on new ticket</span><span style="background:#d1fae5;color:#065f46;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;">On</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#6b7280;">SLA breach alert</span><span style="background:#d1fae5;color:#065f46;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;">On</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#6b7280;">Daily summary report</span><span style="background:#d1fae5;color:#065f46;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;">On</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:#6b7280;">Chat transcripts</span><span style="background:#fee2e2;color:#991b1b;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;">Off</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── APPS ── -->
+  <div id="zd-apps-view" class="zd-section-view" style="display:none;flex:1;padding:24px;overflow:auto;background:#f3f4f6;">
+    <div style="font-size:18px;font-weight:700;color:#1f2937;margin-bottom:16px;">Marketplace Apps</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+      <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e5e7eb;"><div style="font-size:28px;margin-bottom:8px;">🔗</div><div style="font-weight:700;font-size:14px;color:#1f2937;">Slack Integration</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Get ticket notifications in Slack channels</div><div style="margin-top:12px;"><span style="background:#d1fae5;color:#065f46;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;">Installed</span></div></div>
+      <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e5e7eb;"><div style="font-size:28px;margin-bottom:8px;">📊</div><div style="font-weight:700;font-size:14px;color:#1f2937;">Salesforce</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Sync customer data with Salesforce CRM</div><div style="margin-top:12px;"><span style="background:#d1fae5;color:#065f46;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;">Installed</span></div></div>
+      <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e5e7eb;"><div style="font-size:28px;margin-bottom:8px;">📹</div><div style="font-weight:700;font-size:14px;color:#1f2937;">Zoom</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Start Zoom meetings directly from tickets</div><div style="margin-top:12px;"><span style="background:#dbeafe;color:#1e40af;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;cursor:pointer;" onclick="zdInstallApp('Zoom')">Install</span></div></div>
+      <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e5e7eb;"><div style="font-size:28px;margin-bottom:8px;">🤖</div><div style="font-weight:700;font-size:14px;color:#1f2937;">AI Answer Bot</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Auto-suggest articles for incoming tickets</div><div style="margin-top:12px;"><span style="background:#d1fae5;color:#065f46;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;">Installed</span></div></div>
+      <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e5e7eb;"><div style="font-size:28px;margin-bottom:8px;">📈</div><div style="font-weight:700;font-size:14px;color:#1f2937;">Explore Analytics</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Advanced reporting and BI dashboards</div><div style="margin-top:12px;"><span style="background:#d1fae5;color:#065f46;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;">Installed</span></div></div>
+      <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e5e7eb;"><div style="font-size:28px;margin-bottom:8px;">🔔</div><div style="font-weight:700;font-size:14px;color:#1f2937;">PagerDuty</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Escalate urgent tickets to on-call teams</div><div style="margin-top:12px;"><span style="background:#dbeafe;color:#1e40af;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;cursor:pointer;" onclick="zdInstallApp('PagerDuty')">Install</span></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     FRESHSERVICE
+═══════════════════════════════════════════════════ -->
+<div id="freshservice" class="platform">
+  <div class="fs-sidebar">
+    <div class="fs-logo">
+      <div class="fs-logo-box">FS</div>
+      <div><div class="fs-logo-txt">Freshservice</div><div class="fs-logo-sub">ITSM Platform</div></div>
+    </div>
+    <div class="fs-nav">
+      <div class="fs-nav-section">Service Desk</div>
+      <div class="fs-nav-item active" data-view="fs-tickets" onclick="fsNav(this)"><span>🎫</span> Tickets</div>
+      <div class="fs-nav-item" data-view="fs-problems" onclick="fsNav(this)"><span>🔍</span> Problems</div>
+      <div class="fs-nav-item" data-view="fs-changes" onclick="fsNav(this)"><span>🔄</span> Changes</div>
+      <div class="fs-nav-item" data-view="fs-releases" onclick="fsNav(this)"><span>🚀</span> Releases</div>
+      <div class="fs-nav-section">Asset Management</div>
+      <div class="fs-nav-item" data-view="fs-assets" onclick="fsNav(this)"><span>💻</span> Assets</div>
+      <div class="fs-nav-item" data-view="fs-cmdb" onclick="fsNav(this)"><span>🗺</span> CMDB</div>
+      <div class="fs-nav-section">Support</div>
+      <div class="fs-nav-item" data-view="fs-catalog" onclick="fsNav(this)"><span>🛒</span> Service Catalog</div>
+      <div class="fs-nav-item" data-view="fs-knowledge" onclick="fsNav(this)"><span>📖</span> Knowledge Base</div>
+      <div class="fs-nav-item" data-view="fs-reports" onclick="fsNav(this)"><span>📊</span> Reports</div>
+    </div>
+    <div class="fs-user">
+      <div class="fs-avatar">US</div>
+      <div><div style="font-size:12px;font-weight:600;color:#1a1f36;">User</div><div style="font-size:11px;color:#9ca3af;">IT Agent</div></div>
+    </div>
+  </div>
+
+  <div class="fs-main">
+    <div class="fs-topbar">
+      <h2>Tickets</h2>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div class="fs-search">
+          <span style="color:#9ca3af;">🔍</span>
+          <input type="text" placeholder="Search tickets…" />
+        </div>
+        <button class="btn-orange" onclick="openModal('fs-ticket-modal')">+ New Ticket</button>
+      </div>
+    </div>
+    <div class="fs-content">
+
+      <!-- ── TICKETS ── -->
+      <div id="fs-tickets" class="fs-view">
+        <div class="fs-kpi-grid">
+          <div class="fs-kpi"><div><div class="val" style="color:#f4820f;">52</div><div class="lbl">Open Tickets</div></div><div class="icon">🎫</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#3b82f6;">24</div><div class="lbl">In Progress</div></div><div class="icon">⚙</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#10b981;">21</div><div class="lbl">Resolved Today</div></div><div class="icon">✅</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#ef4444;">4</div><div class="lbl">Overdue</div></div><div class="icon">🚨</div></div>
+        </div>
+        <div class="fs-card">
+          <div class="fs-card-header"><span>Recent Tickets</span><div style="display:flex;gap:6px;"><button style="border:1px solid #e0e4ef;border-radius:4px;padding:4px 10px;font-size:12px;cursor:pointer;background:#fff;color:#4a5568;" onclick="openModal('fs-filter-modal')">Filter</button><button style="border:1px solid #e0e4ef;border-radius:4px;padding:4px 10px;font-size:12px;cursor:pointer;background:#fff;color:#4a5568;" onclick="fsExport()">Export</button></div></div>
+          <table class="fs-table"><thead><tr><th>ID</th><th>Priority</th><th>Subject</th><th>Requester</th><th>Status</th><th>Due</th></tr></thead><tbody id="fs-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ── PROBLEMS ── -->
+      <div id="fs-problems" class="fs-view" style="display:none;">
+        <div class="fs-kpi-grid">
+          <div class="fs-kpi"><div><div class="val" style="color:#8b5cf6;">9</div><div class="lbl">Open Problems</div></div><div class="icon">🔍</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#f59e0b;">3</div><div class="lbl">Under Investigation</div></div><div class="icon">🔬</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#10b981;">5</div><div class="lbl">Known Errors</div></div><div class="icon">📋</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#ef4444;">1</div><div class="lbl">Critical</div></div><div class="icon">🚨</div></div>
+        </div>
+        <div class="fs-card">
+          <div class="fs-card-header"><span>Problem Records</span><button class="btn-orange" style="font-size:12px;padding:5px 12px;" onclick="openModal('fs-problem-modal')">+ New Problem</button></div>
+          <table class="fs-table"><thead><tr><th>ID</th><th>Priority</th><th>Status</th><th>Subject</th><th>Related Incidents</th><th>Assigned To</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#f4820f;font-weight:600;">PRB-0031</td><td><span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;">Critical</span></td><td><span style="background:#ede9fe;color:#6d28d9;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;">Investigating</span></td><td>Recurring VPN drops — HQ campus</td><td style="font-weight:600;color:#ef4444;">11</td><td>David King</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">PRB-0030</td><td><span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;">High</span></td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;">Known Error</span></td><td>SAP login timeouts — finance dept</td><td style="font-weight:600;color:#f59e0b;">5</td><td>Emma Patel</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">PRB-0029</td><td><span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;">Medium</span></td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;">Known Error</span></td><td>Outlook calendar sync fails after patch</td><td style="font-weight:600;color:#f59e0b;">4</td><td>Sarah Admin</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── CHANGES ── -->
+      <div id="fs-changes" class="fs-view" style="display:none;">
+        <div class="fs-kpi-grid">
+          <div class="fs-kpi"><div><div class="val" style="color:#f4820f;">6</div><div class="lbl">Pending Approval</div></div><div class="icon">⏳</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#10b981;">4</div><div class="lbl">Approved</div></div><div class="icon">✅</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#3b82f6;">2</div><div class="lbl">In Progress</div></div><div class="icon">🔄</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#ef4444;">1</div><div class="lbl">Rejected</div></div><div class="icon">✕</div></div>
+        </div>
+        <div class="fs-card">
+          <div class="fs-card-header"><span>Change Requests</span><button class="btn-orange" style="font-size:12px;padding:5px 12px;" onclick="openModal('fs-change-modal')">+ New Change</button></div>
+          <table class="fs-table"><thead><tr><th>ID</th><th>Type</th><th>Risk</th><th>Status</th><th>Subject</th><th>Planned Date</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#f4820f;font-weight:600;">CHG-0088</td><td><span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:2px 7px;font-size:11px;">Normal</span></td><td><span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 7px;font-size:11px;">Medium</span></td><td><span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 7px;font-size:11px;">Pending</span></td><td>Upgrade Exchange Online to Hybrid Config</td><td>Mar 18</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">CHG-0087</td><td><span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 7px;font-size:11px;">Emergency</span></td><td><span style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 7px;font-size:11px;">High</span></td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;">Approved</span></td><td>Patch CVE-2025-1112 on all endpoints</td><td>Mar 15</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">CHG-0086</td><td><span style="background:#ede9fe;color:#6d28d9;border-radius:4px;padding:2px 7px;font-size:11px;">Standard</span></td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;">Low</span></td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;">Approved</span></td><td>Monthly firewall rule review and cleanup</td><td>Mar 20</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── RELEASES ── -->
+      <div id="fs-releases" class="fs-view" style="display:none;">
+        <div class="fs-kpi-grid">
+          <div class="fs-kpi"><div><div class="val" style="color:#f4820f;">3</div><div class="lbl">Active Releases</div></div><div class="icon">🚀</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#10b981;">7</div><div class="lbl">Completed (MTD)</div></div><div class="icon">✅</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#3b82f6;">2</div><div class="lbl">In Testing</div></div><div class="icon">🔬</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#8b5cf6;">1</div><div class="lbl">Scheduled</div></div><div class="icon">📅</div></div>
+        </div>
+        <div class="fs-card">
+          <div class="fs-card-header"><span>Release Pipeline</span><button class="btn-orange" style="font-size:12px;padding:5px 12px;" onclick="openModal('fs-release-modal')">+ New Release</button></div>
+          <table class="fs-table"><thead><tr><th>Release</th><th>Version</th><th>Status</th><th>Deployment Type</th><th>Owner</th><th>Target Date</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#f4820f;font-weight:600;">REL-0024</td><td>v3.2.1</td><td><span style="background:#dbeafe;color:#1e40af;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;">Testing</span></td><td>Major</td><td>DevOps Team</td><td>Mar 22</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">REL-0023</td><td>v3.1.5-patch</td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;">Deploying</span></td><td>Patch</td><td>Sarah Admin</td><td>Mar 16</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">REL-0022</td><td>v3.1.4</td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;">Completed</span></td><td>Minor</td><td>Dev Lead</td><td>Mar 10</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── ASSETS ── -->
+      <div id="fs-assets" class="fs-view" style="display:none;">
+        <div class="fs-kpi-grid">
+          <div class="fs-kpi"><div><div class="val" style="color:#f4820f;">842</div><div class="lbl">Total Assets</div></div><div class="icon">💻</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#10b981;">798</div><div class="lbl">In Use</div></div><div class="icon">✅</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#f59e0b;">28</div><div class="lbl">In Stock</div></div><div class="icon">📦</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#ef4444;">16</div><div class="lbl">Retired</div></div><div class="icon">🗑</div></div>
+        </div>
+        <div class="fs-card">
+          <div class="fs-card-header"><span>Asset Inventory</span><button class="btn-orange" style="font-size:12px;padding:5px 12px;" onclick="openModal('fs-asset-modal')">+ Add Asset</button></div>
+          <table class="fs-table"><thead><tr><th>Asset Tag</th><th>Name</th><th>Type</th><th>Status</th><th>Assigned To</th><th>Purchased</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#f4820f;font-weight:600;">AT-5401</td><td>Dell Latitude 5540</td><td>Laptop</td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;">In Use</span></td><td>Emily Clark</td><td>Feb 2024</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">AT-5400</td><td>Cisco 8861 IP Phone</td><td>Phone</td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;">In Use</span></td><td>James Webb</td><td>Nov 2022</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">AT-5399</td><td>MacBook Pro M3 16"</td><td>Laptop</td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;">In Use</span></td><td>Priya Patel</td><td>Dec 2023</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">AT-5398</td><td>HP EliteDesk 800 G6</td><td>Desktop</td><td><span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 7px;font-size:11px;">In Stock</span></td><td>—</td><td>Aug 2021</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── CMDB ── -->
+      <div id="fs-cmdb" class="fs-view" style="display:none;">
+        <div class="fs-kpi-grid">
+          <div class="fs-kpi"><div><div class="val" style="color:#f4820f;">934</div><div class="lbl">Total CIs</div></div><div class="icon">🗺</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#10b981;">901</div><div class="lbl">Operational</div></div><div class="icon">✅</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#f59e0b;">22</div><div class="lbl">Needs Review</div></div><div class="icon">⚠</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#6b7280;">11</div><div class="lbl">Decommissioned</div></div><div class="icon">🗑</div></div>
+        </div>
+        <div class="fs-card">
+          <div class="fs-card-header"><span>Configuration Items</span></div>
+          <table class="fs-table"><thead><tr><th>CI Name</th><th>Class</th><th>Status</th><th>IP / Version</th><th>Managed By</th><th>Last Audit</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#f4820f;font-weight:600;">PROD-APP-01</td><td>Application Server</td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;">Operational</span></td><td>10.20.1.10</td><td>DevOps</td><td>Mar 14</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">DB-CLUSTER-02</td><td>Database Cluster</td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;">Operational</span></td><td>PostgreSQL 16</td><td>DBA Team</td><td>Mar 15</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">LB-NGINX-01</td><td>Load Balancer</td><td><span style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 7px;font-size:11px;">Review</span></td><td>nginx/1.24</td><td>Net Ops</td><td>Mar 12</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">BACKUP-NAS-01</td><td>Storage</td><td><span style="background:#d1fae5;color:#065f46;border-radius:4px;padding:2px 7px;font-size:11px;">Operational</span></td><td>72TB NAS</td><td>Infra</td><td>Mar 14</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── SERVICE CATALOG ── -->
+      <div id="fs-catalog" class="fs-view" style="display:none;">
+        <div style="font-size:15px;font-weight:700;color:#1a1f36;margin-bottom:16px;">Service Catalog</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+          <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e0e4ef;cursor:pointer;" onmouseover="this.style.borderColor='#f4820f'" onmouseout="this.style.borderColor='#e0e4ef'" onclick="showToast('Hardware Request form opened')"><div style="font-size:26px;margin-bottom:8px;">💻</div><div style="font-weight:700;font-size:14px;color:#1a1f36;">Hardware Request</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Laptop, monitor, peripherals</div></div>
+          <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e0e4ef;cursor:pointer;" onmouseover="this.style.borderColor='#f4820f'" onmouseout="this.style.borderColor='#e0e4ef'" onclick="showToast('Access Request form opened')"><div style="font-size:26px;margin-bottom:8px;">🔑</div><div style="font-weight:700;font-size:14px;color:#1a1f36;">Access Request</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Systems, apps, resource access</div></div>
+          <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e0e4ef;cursor:pointer;" onmouseover="this.style.borderColor='#f4820f'" onmouseout="this.style.borderColor='#e0e4ef'" onclick="showToast('Network & VPN Request form opened')"><div style="font-size:26px;margin-bottom:8px;">🌐</div><div style="font-weight:700;font-size:14px;color:#1a1f36;">Network & VPN</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Remote access and connectivity</div></div>
+          <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e0e4ef;cursor:pointer;" onmouseover="this.style.borderColor='#f4820f'" onmouseout="this.style.borderColor='#e0e4ef'" onclick="showToast('Cloud Services Request form opened')"><div style="font-size:26px;margin-bottom:8px;">☁</div><div style="font-weight:700;font-size:14px;color:#1a1f36;">Cloud Services</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">M365, Azure, AWS provisioning</div></div>
+          <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e0e4ef;cursor:pointer;" onmouseover="this.style.borderColor='#f4820f'" onmouseout="this.style.borderColor='#e0e4ef'" onclick="showToast('Mobile Device Request form opened')"><div style="font-size:26px;margin-bottom:8px;">📱</div><div style="font-weight:700;font-size:14px;color:#1a1f36;">Mobile Device</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Enroll & configure phones/tablets</div></div>
+          <div style="background:#fff;border-radius:8px;padding:18px;border:1px solid #e0e4ef;cursor:pointer;" onmouseover="this.style.borderColor='#f4820f'" onmouseout="this.style.borderColor='#e0e4ef'" onclick="showToast('New Employee Onboarding form opened')"><div style="font-size:26px;margin-bottom:8px;">🧑‍💼</div><div style="font-weight:700;font-size:14px;color:#1a1f36;">New Employee Onboarding</div><div style="font-size:12px;color:#6b7280;margin-top:4px;">Full IT setup for new hires</div></div>
+        </div>
+      </div>
+
+      <!-- ── KNOWLEDGE BASE ── -->
+      <div id="fs-knowledge" class="fs-view" style="display:none;">
+        <div style="font-size:15px;font-weight:700;color:#1a1f36;margin-bottom:12px;">Knowledge Base</div>
+        <div style="margin-bottom:14px;"><input type="text" placeholder="🔍 Search articles…" style="width:100%;border:1px solid #e0e4ef;border-radius:6px;padding:9px 12px;font-size:13px;" /></div>
+        <div class="fs-card">
+          <div class="fs-card-header"><span>Published Articles</span><span style="font-size:12px;color:#6b7280;">89 articles</span></div>
+          <table class="fs-table"><thead><tr><th>Article</th><th>Category</th><th>Title</th><th>Views</th><th>Rating</th><th>Updated</th></tr></thead>
+          <tbody>
+            <tr><td style="color:#f4820f;font-weight:600;">KA-0084</td><td>Email</td><td>Fixing Outlook sync issues on mobile</td><td>2,140</td><td>⭐⭐⭐⭐⭐</td><td>Mar 13</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">KA-0083</td><td>Network</td><td>How to set up Freshservice VPN client</td><td>1,760</td><td>⭐⭐⭐⭐</td><td>Mar 9</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">KA-0082</td><td>Access</td><td>Requesting elevated admin rights — step by step</td><td>930</td><td>⭐⭐⭐⭐⭐</td><td>Mar 5</td></tr>
+            <tr><td style="color:#f4820f;font-weight:600;">KA-0081</td><td>Hardware</td><td>Laptop battery replacement guide</td><td>410</td><td>⭐⭐⭐</td><td>Feb 22</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+      <!-- ── REPORTS ── -->
+      <div id="fs-reports" class="fs-view" style="display:none;">
+        <div class="fs-kpi-grid">
+          <div class="fs-kpi"><div><div class="val" style="color:#10b981;">96%</div><div class="lbl">SLA Compliance</div></div><div class="icon">📈</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#3b82f6;">2.8h</div><div class="lbl">Avg Resolution</div></div><div class="icon">⏱</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#f4820f;">4.6</div><div class="lbl">CSAT Score</div></div><div class="icon">⭐</div></div>
+          <div class="fs-kpi"><div><div class="val" style="color:#8b5cf6;">287</div><div class="lbl">Tickets (MTD)</div></div><div class="icon">🎫</div></div>
+        </div>
+        <div class="fs-card">
+          <div class="fs-card-header"><span>Performance by Category (Last 30 Days)</span></div>
+          <table class="fs-table"><thead><tr><th>Category</th><th>Total</th><th>Resolved</th><th>Pending</th><th>Avg Time</th><th>SLA %</th></tr></thead>
+          <tbody>
+            <tr><td>Network</td><td>74</td><td>72</td><td>2</td><td>1.6h</td><td><span style="color:#10b981;font-weight:600;">97.3%</span></td></tr>
+            <tr><td>Hardware</td><td>58</td><td>55</td><td>3</td><td>3.9h</td><td><span style="color:#10b981;font-weight:600;">94.8%</span></td></tr>
+            <tr><td>Software</td><td>89</td><td>81</td><td>8</td><td>2.3h</td><td><span style="color:#f59e0b;font-weight:600;">91.0%</span></td></tr>
+            <tr><td>Access</td><td>46</td><td>46</td><td>0</td><td>1.1h</td><td><span style="color:#10b981;font-weight:600;">100%</span></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     NEW INCIDENT MODAL (ServiceNow)
+═══════════════════════════════════════════════════ -->
+<div id="sn-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:560px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#1b2f53;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New Incident</span>
+      <span onclick="closeModal()" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Short Description *</label><input type="text" placeholder="Brief description of the issue" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#555;">Priority</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;">
+            <option>1-Critical</option><option>2-High</option><option selected>3-Moderate</option><option>4-Low</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#555;">Category</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Network</option><option>Hardware</option><option>Software</option><option>Email</option><option>Security</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Description</label><textarea rows="4" placeholder="Detailed description…" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModal()" style="border:1px solid #ddd;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-green" style="padding:8px 18px;" onclick="submitIncident()">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FRESHSERVICE: NEW TICKET MODAL ═══ -->
+<div id="fs-ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:540px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#f4820f;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New Ticket</span>
+      <span onclick="closeModalById('fs-ticket-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Subject *</label><input id="fs-ticket-subject" type="text" placeholder="Brief description of the issue" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Priority</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Urgent</option><option>High</option><option selected>Medium</option><option>Low</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Type</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Incident</option><option>Service Request</option><option>Change</option><option>Problem</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Requester</label><input type="text" placeholder="Requester name or email" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Description</label><textarea rows="3" placeholder="Detailed description…" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('fs-ticket-modal')" style="border:1px solid #e0e4ef;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-orange" style="padding:8px 18px;" onclick="submitFsTicket()">Create Ticket</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FRESHSERVICE: FILTER MODAL ═══ -->
+<div id="fs-filter-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:420px;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#f4820f;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">Filter Tickets</span>
+      <span onclick="closeModalById('fs-filter-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Status</label>
+        <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+          <option value="">All</option><option>Open</option><option>In Progress</option><option>Pending</option><option>Resolved</option>
+        </select>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Priority</label>
+        <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+          <option value="">All</option><option>Urgent</option><option>High</option><option>Medium</option><option>Low</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('fs-filter-modal')" style="border:1px solid #e0e4ef;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-orange" style="padding:8px 18px;" onclick="applyFsFilter()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FRESHSERVICE: NEW PROBLEM MODAL ═══ -->
+<div id="fs-problem-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#f4820f;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New Problem Record</span>
+      <span onclick="closeModalById('fs-problem-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Subject *</label><input id="fs-problem-subject" type="text" placeholder="Brief description of the problem" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Priority</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Critical</option><option>High</option><option selected>Medium</option><option>Low</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Assigned To</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Unassigned</option><option>David King</option><option>Emma Patel</option><option>Sarah Admin</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Description</label><textarea rows="3" placeholder="Impact and detailed description…" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('fs-problem-modal')" style="border:1px solid #e0e4ef;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-orange" style="padding:8px 18px;" onclick="submitFsProblem()">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FRESHSERVICE: NEW CHANGE MODAL ═══ -->
+<div id="fs-change-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#f4820f;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New Change Request</span>
+      <span onclick="closeModalById('fs-change-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Subject *</label><input id="fs-change-subject" type="text" placeholder="Brief description of the change" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Type</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Normal</option><option>Standard</option><option>Emergency</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Risk</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Low</option><option selected>Medium</option><option>High</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Planned Date</label>
+          <input type="date" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;" />
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Justification</label><textarea rows="3" placeholder="Reason for change…" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('fs-change-modal')" style="border:1px solid #e0e4ef;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-orange" style="padding:8px 18px;" onclick="submitFsChange()">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FRESHSERVICE: NEW RELEASE MODAL ═══ -->
+<div id="fs-release-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#f4820f;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New Release</span>
+      <span onclick="closeModalById('fs-release-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Release Name *</label><input id="fs-release-name" type="text" placeholder="e.g. v3.3.0 - Feature Release" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Version</label><input type="text" placeholder="v0.0.0" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;" /></div>
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Type</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Major</option><option>Minor</option><option>Patch</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Target Date</label><input type="date" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('fs-release-modal')" style="border:1px solid #e0e4ef;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-orange" style="padding:8px 18px;" onclick="submitFsRelease()">Create Release</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FRESHSERVICE: ADD ASSET MODAL ═══ -->
+<div id="fs-asset-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#f4820f;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">Add Asset</span>
+      <span onclick="closeModalById('fs-asset-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Asset Name *</label><input id="fs-asset-name" type="text" placeholder="e.g. Dell Latitude 5540" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Type</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Laptop</option><option>Desktop</option><option>Phone</option><option>Printer</option><option>Server</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Status</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;">
+            <option>In Use</option><option>In Stock</option><option>Maintenance</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#4a5568;">Assigned To</label><input type="text" placeholder="Employee name or team" style="width:100%;margin-top:4px;border:1px solid #e0e4ef;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('fs-asset-modal')" style="border:1px solid #e0e4ef;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-orange" style="padding:8px 18px;" onclick="submitFsAsset()">Add Asset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ZENDESK: NEW VIEW MODAL ═══ -->
+<div id="zd-view-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:440px;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#03b48a;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New View</span>
+      <span onclick="closeModalById('zd-view-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#6b7280;">View Name *</label><input id="zd-view-name" type="text" placeholder="e.g. Escalated tickets" style="width:100%;margin-top:4px;border:1px solid #d1d5db;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div><label style="font-size:12px;font-weight:600;color:#6b7280;">Conditions</label>
+        <select style="width:100%;margin-top:4px;border:1px solid #d1d5db;border-radius:4px;padding:8px;font-size:13px;">
+          <option>Status is Open</option><option>Status is Pending</option><option>Priority is Urgent</option><option>Assignee is me</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('zd-view-modal')" style="border:1px solid #d1d5db;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button style="background:#03b48a;color:#fff;border:none;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;font-weight:600;" onclick="submitZdView()">Create View</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ZENDESK: NEW TICKET MODAL ═══ -->
+<div id="zd-ticket-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:540px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#03b48a;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New Ticket</span>
+      <span onclick="closeModalById('zd-ticket-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#6b7280;">Subject *</label><input id="zd-ticket-subject" type="text" placeholder="Brief description of the issue" style="width:100%;margin-top:4px;border:1px solid #d1d5db;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#6b7280;">Priority</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #d1d5db;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Urgent</option><option>High</option><option selected>Normal</option><option>Low</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#6b7280;">Assignee</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #d1d5db;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Unassigned</option><option>Sarah Agent</option><option>Tom Agent</option><option>Alice Agent</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#6b7280;">Requester Email</label><input type="email" placeholder="customer@example.com" style="width:100%;margin-top:4px;border:1px solid #d1d5db;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div><label style="font-size:12px;font-weight:600;color:#6b7280;">Description</label><textarea rows="4" placeholder="Describe the issue…" style="width:100%;margin-top:4px;border:1px solid #d1d5db;border-radius:4px;padding:8px;font-size:13px;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('zd-ticket-modal')" style="border:1px solid #d1d5db;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button style="background:#03b48a;color:#fff;border:none;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;font-weight:600;" onclick="submitZdTicket()">Create Ticket</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ZENDESK: ADD CUSTOMER MODAL ═══ -->
+<div id="zd-customer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:480px;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#03b48a;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">Add Customer</span>
+      <span onclick="closeModalById('zd-customer-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#6b7280;">Full Name *</label><input id="zd-cust-name" type="text" placeholder="Customer full name" style="width:100%;margin-top:4px;border:1px solid #d1d5db;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div><label style="font-size:12px;font-weight:600;color:#6b7280;">Email *</label><input id="zd-cust-email" type="email" placeholder="customer@company.com" style="width:100%;margin-top:4px;border:1px solid #d1d5db;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div><label style="font-size:12px;font-weight:600;color:#6b7280;">Organization</label><input type="text" placeholder="Company name" style="width:100%;margin-top:4px;border:1px solid #d1d5db;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('zd-customer-modal')" style="border:1px solid #d1d5db;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button style="background:#03b48a;color:#fff;border:none;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;font-weight:600;" onclick="submitZdCustomer()">Add Customer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ JIRA: CREATE ISSUE MODAL ═══ -->
+<div id="jira-issue-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:540px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#0052cc;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">Create Issue</span>
+      <span onclick="closeModalById('jira-issue-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#5e6c84;">Issue Type</label>
+        <select style="width:100%;margin-top:4px;border:1px solid #dfe1e6;border-radius:4px;padding:8px;font-size:13px;color:#172b4d;">
+          <option>Incident</option><option>Service Request</option><option>Change Request</option><option>Problem</option>
+        </select>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#5e6c84;">Summary *</label><input id="jira-issue-summary" type="text" placeholder="Brief summary of the issue" style="width:100%;margin-top:4px;border:1px solid #dfe1e6;border-radius:4px;padding:8px;font-size:13px;color:#172b4d;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#5e6c84;">Priority</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #dfe1e6;border-radius:4px;padding:8px;font-size:13px;color:#172b4d;">
+            <option>🔴 Critical</option><option>🟠 High</option><option selected>🟡 Medium</option><option>🔵 Low</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#5e6c84;">Assignee</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #dfe1e6;border-radius:4px;padding:8px;font-size:13px;color:#172b4d;">
+            <option>Unassigned</option><option>Alice Johnson</option><option>Bob Martinez</option><option>Clara Singh</option><option>David Kim</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#5e6c84;">Description</label><textarea rows="4" placeholder="Describe the issue in detail…" style="width:100%;margin-top:4px;border:1px solid #dfe1e6;border-radius:4px;padding:8px;font-size:13px;color:#172b4d;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('jira-issue-modal')" style="border:1px solid #dfe1e6;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;color:#172b4d;">Cancel</button>
+        <button class="btn-blue" style="padding:8px 18px;" onclick="submitJiraIssue()">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ JIRA: ADD ASSET MODAL ═══ -->
+<div id="jira-asset-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#0052cc;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">Add Asset</span>
+      <span onclick="closeModalById('jira-asset-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#5e6c84;">Asset Name *</label><input id="jira-asset-name" type="text" placeholder="e.g. Dell XPS 15 Laptop" style="width:100%;margin-top:4px;border:1px solid #dfe1e6;border-radius:4px;padding:8px;font-size:13px;color:#172b4d;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#5e6c84;">Type</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #dfe1e6;border-radius:4px;padding:8px;font-size:13px;color:#172b4d;">
+            <option>Laptop</option><option>Desktop</option><option>Phone</option><option>Printer</option><option>Switch</option><option>Server</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#5e6c84;">Status</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #dfe1e6;border-radius:4px;padding:8px;font-size:13px;color:#172b4d;">
+            <option>In Use</option><option>In Stock</option><option>Maintenance</option><option>Retired</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#5e6c84;">Assigned To</label><input type="text" placeholder="Employee name or team" style="width:100%;margin-top:4px;border:1px solid #dfe1e6;border-radius:4px;padding:8px;font-size:13px;color:#172b4d;" /></div>
+      <div><label style="font-size:12px;font-weight:600;color:#5e6c84;">Purchase Date</label><input type="month" style="width:100%;margin-top:4px;border:1px solid #dfe1e6;border-radius:4px;padding:8px;font-size:13px;color:#172b4d;" /></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('jira-asset-modal')" style="border:1px solid #dfe1e6;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;color:#172b4d;">Cancel</button>
+        <button class="btn-blue" style="padding:8px 18px;" onclick="submitJiraAsset()">Add Asset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NEW PROBLEM MODAL ═══ -->
+<div id="sn-problem-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#1b2f53;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New Problem Record</span>
+      <span onclick="closeModalById('sn-problem-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Short Description *</label><input id="prb-desc" type="text" placeholder="Brief description of the problem" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#555;">Priority</label>
+          <select id="prb-priority" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;">
+            <option>1-Critical</option><option>2-High</option><option selected>3-Moderate</option><option>4-Low</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#555;">Category</label>
+          <select id="prb-category" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Network</option><option>Hardware</option><option>Software</option><option>Email</option><option>Database</option><option>Security</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Description</label><textarea rows="3" placeholder="Detailed description…" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('sn-problem-modal')" style="border:1px solid #ddd;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-green" style="padding:8px 18px;" onclick="submitProblem()">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NEW CHANGE MODAL ═══ -->
+<div id="sn-change-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#1b2f53;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New Change Request</span>
+      <span onclick="closeModalById('sn-change-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Short Description *</label><input id="chg-desc" type="text" placeholder="Brief description of the change" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#555;">Type</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Normal</option><option>Standard</option><option>Emergency</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#555;">Risk</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Low</option><option selected>Medium</option><option>High</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Scheduled Date</label><input type="datetime-local" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Justification</label><textarea rows="3" placeholder="Reason for change…" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('sn-change-modal')" style="border:1px solid #ddd;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-green" style="padding:8px 18px;" onclick="submitChange()">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NEW ARTICLE MODAL ═══ -->
+<div id="sn-article-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#1b2f53;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New Knowledge Article</span>
+      <span onclick="closeModalById('sn-article-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Title *</label><input type="text" placeholder="Article title" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Category</label>
+        <select style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;">
+          <option>Network</option><option>Hardware</option><option>Software</option><option>Email</option><option>Access</option><option>Security</option>
+        </select>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Content</label><textarea rows="5" placeholder="Write your article content here…" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('sn-article-modal')" style="border:1px solid #ddd;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-green" style="padding:8px 18px;" onclick="submitArticle()">Publish</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NEW HR CASE MODAL ═══ -->
+<div id="sn-hrcase-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:8px;width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="padding:16px 20px;background:#1b2f53;color:#fff;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:700;">New HR Case</span>
+      <span onclick="closeModalById('sn-hrcase-modal')" style="cursor:pointer;font-size:18px;">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Employee Name *</label><input type="text" placeholder="Employee full name" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div><label style="font-size:12px;font-weight:600;color:#555;">Case Type</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;">
+            <option>Onboarding</option><option>Offboarding</option><option>General</option><option>Payroll</option>
+          </select>
+        </div>
+        <div><label style="font-size:12px;font-weight:600;color:#555;">Priority</label>
+          <select style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;">
+            <option>High</option><option selected>Medium</option><option>Low</option>
+          </select>
+        </div>
+      </div>
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Subject *</label><input type="text" placeholder="Brief subject" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;" /></div>
+      <div><label style="font-size:12px;font-weight:600;color:#555;">Details</label><textarea rows="3" placeholder="Additional details…" style="width:100%;margin-top:4px;border:1px solid #ddd;border-radius:4px;padding:8px;font-size:13px;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+        <button onclick="closeModalById('sn-hrcase-modal')" style="border:1px solid #ddd;background:#fff;border-radius:4px;padding:8px 18px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button class="btn-green" style="padding:8px 18px;" onclick="submitHRCase()">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══ DATA ═══ */
+const snIncidents = [
+  { id:"INC0001234", priority:"1-Critical", state:"New", category:"Network", desc:"VPN connectivity failure across all US offices", assigned:"John Smith", updated:"2 min ago" },
+  { id:"INC0001233", priority:"2-High", state:"In Progress", category:"Hardware", desc:"Multiple workstations not booting after Windows update", assigned:"Sarah Lee", updated:"15 min ago" },
+  { id:"INC0001232", priority:"3-Moderate", state:"In Progress", category:"Software", desc:"Salesforce CRM intermittent login errors", assigned:"Mike Chen", updated:"1 hr ago" },
+  { id:"INC0001231", priority:"3-Moderate", state:"On Hold", category:"Email", desc:"Outlook calendar sync not working on mobile", assigned:"Dana White", updated:"2 hr ago" },
+  { id:"INC0001230", priority:"4-Low", state:"Resolved", category:"Access", desc:"New employee needs access to SharePoint", assigned:"Tom Brady", updated:"3 hr ago" },
+  { id:"INC0001229", priority:"2-High", state:"New", category:"Database", desc:"Production database performance degradation", assigned:"Unassigned", updated:"5 min ago" },
+  { id:"INC0001228", priority:"1-Critical", state:"In Progress", category:"Security", desc:"Suspected phishing attack on Finance department", assigned:"Security Team", updated:"8 min ago" },
+  { id:"INC0001227", priority:"3-Moderate", state:"Resolved", category:"Network", desc:"Slow internet connection in Building B", assigned:"Net Ops", updated:"4 hr ago" },
+];
+const snPriColor = { "1-Critical":"#d9534f","2-High":"#f0ad4e","3-Moderate":"#5bc0de","4-Low":"#5cb85c" };
+const snStateColor = { "New":"#e74c3c","In Progress":"#3498db","On Hold":"#e67e22","Resolved":"#27ae60" };
+
+const jiraIssues = [
+  { id:"JSM-1042", type:"INC", typeColor:"#e74c3c", priority:"🔴 Critical", status:"Waiting for support", summary:"Production API returning 500 errors on checkout flow", requester:"Alice Johnson", sla:"Breached", created:"Mar 15, 10:02 AM" },
+  { id:"JSM-1041", type:"SR", typeColor:"#3498db", priority:"🟠 High", status:"In Progress", summary:"Request new laptop for onboarding — Emily Clark", requester:"HR Team", sla:"4h 20m", created:"Mar 15, 9:45 AM" },
+  { id:"JSM-1040", type:"CR", typeColor:"#9b59b6", priority:"🟡 Medium", status:"Pending approval", summary:"Update firewall rules for new VLAN segment", requester:"Network Ops", sla:"12h 00m", created:"Mar 15, 9:10 AM" },
+  { id:"JSM-1039", type:"INC", typeColor:"#e74c3c", priority:"🟠 High", status:"In Progress", summary:"Email server rejecting external inbound messages", requester:"Bob Martinez", sla:"1h 45m", created:"Mar 15, 8:55 AM" },
+  { id:"JSM-1038", type:"PRB", typeColor:"#e67e22", priority:"🟡 Medium", status:"Investigating", summary:"Recurring nightly batch job failures — 3 consecutive days", requester:"DevOps", sla:"24h 00m", created:"Mar 14, 11:30 PM" },
+  { id:"JSM-1037", type:"SR", typeColor:"#3498db", priority:"🔵 Low", status:"Waiting for customer", summary:"Add user permissions to BI reporting tool", requester:"Finance Dept", sla:"5d 12h", created:"Mar 14, 4:00 PM" },
+  { id:"JSM-1036", type:"INC", typeColor:"#e74c3c", priority:"🔴 Critical", status:"Escalated", summary:"Data center cooling system alert triggered", requester:"Facilities", sla:"Breached", created:"Mar 14, 2:30 PM" },
+];
+
+const zdTickets = [
+  { id:12481, status:"Open", statusColor:"#3b82f6", statusBg:"#eff6ff", priority:"Urgent", priorityColor:"#ef4444", subject:"Cannot access email after password reset", requester:"Mark Wilson", assignee:"Jane Doe", group:"Tier 1 Support", updated:"3 min ago" },
+  { id:12480, status:"Pending", statusColor:"#f59e0b", statusBg:"#fffbeb", priority:"High", priorityColor:"#f59e0b", subject:"Printer not connecting to network share drive", requester:"Lisa Park", assignee:"Tom Reid", group:"Hardware", updated:"22 min ago" },
+  { id:12479, status:"Open", statusColor:"#3b82f6", statusBg:"#eff6ff", priority:"Normal", priorityColor:"#6b7280", subject:"Request access to marketing analytics dashboard", requester:"Sam Carter", assignee:"Unassigned", group:"Access Mgmt", updated:"1 hr ago" },
+  { id:12478, status:"Solved", statusColor:"#10b981", statusBg:"#ecfdf5", priority:"Low", priorityColor:"#10b981", subject:"Update company address in invoice template", requester:"Amanda Fox", assignee:"Jane Doe", group:"Admin", updated:"2 hr ago" },
+  { id:12477, status:"Open", statusColor:"#3b82f6", statusBg:"#eff6ff", priority:"Urgent", priorityColor:"#ef4444", subject:"VPN disconnecting every 10 minutes for remote staff", requester:"David Brooks", assignee:"Net Ops", group:"Network", updated:"5 min ago" },
+  { id:12476, status:"On-hold", statusColor:"#8b5cf6", statusBg:"#ede9fe", priority:"High", priorityColor:"#f59e0b", subject:"New hire laptop setup delayed — starts Monday", requester:"HR Department", assignee:"IT Ops", group:"Hardware", updated:"3 hr ago" },
+  { id:12475, status:"Pending", statusColor:"#f59e0b", statusBg:"#fffbeb", priority:"Normal", priorityColor:"#6b7280", subject:"Zoom license upgrade request for Sales team", requester:"Mike Burns", assignee:"Procurement", group:"Software", updated:"4 hr ago" },
+];
+
+const fsTickets = [
+  { id:"#FST-3201", priority:"Urgent", pColor:"#ef4444", subject:"Core banking app unreachable for all branch staff", requester:"Branch Ops", status:"Open", statusColor:"#ef4444", statusBg:"#fef2f2", due:"Overdue" },
+  { id:"#FST-3200", priority:"High", pColor:"#f59e0b", subject:"SAP transaction errors on PO approval workflow", requester:"Finance Dept", status:"In Progress", statusColor:"#3b82f6", statusBg:"#eff6ff", due:"2 hr" },
+  { id:"#FST-3199", priority:"Medium", pColor:"#3b82f6", subject:"Conference room AV system not projecting", requester:"Facilities", status:"Pending", statusColor:"#8b5cf6", statusBg:"#ede9fe", due:"Tomorrow" },
+  { id:"#FST-3198", priority:"Low", pColor:"#10b981", subject:"Update email signature template for all staff", requester:"Marketing", status:"Open", statusColor:"#ef4444", statusBg:"#fef2f2", due:"Mar 18" },
+  { id:"#FST-3197", priority:"High", pColor:"#f59e0b", subject:"Active Directory sync failing for new user accounts", requester:"HR IT", status:"In Progress", statusColor:"#3b82f6", statusBg:"#eff6ff", due:"4 hr" },
+  { id:"#FST-3196", priority:"Urgent", pColor:"#ef4444", subject:"CCTV system offline across HQ campus", requester:"Security", status:"Open", statusColor:"#ef4444", statusBg:"#fef2f2", due:"Overdue" },
+];
+
+const fsCatalog = [
+  { icon:"💻", bg:"#eff6ff", label:"New Hardware Request", sub:"Laptop, keyboard, monitor…" },
+  { icon:"🔑", bg:"#f0fdf4", label:"Access & Permissions", sub:"System access, VPN, badges" },
+  { icon:"📱", bg:"#fff7ed", label:"Mobile Device Setup", sub:"Phone, tablet enrollment" },
+  { icon:"🌐", bg:"#fdf4ff", label:"Network/VPN Issue", sub:"Connectivity, remote access" },
+  { icon:"☁", bg:"#f0f9ff", label:"Cloud Services", sub:"M365, Google Workspace, AWS" },
+  { icon:"🖨", bg:"#fefce8", label:"Printer / Peripherals", sub:"Setup, drivers, supplies" },
+];
+
+/* ═══ RENDER FUNCTIONS ═══ */
+function renderSN(filter='All') {
+  const tbody = document.getElementById('sn-tbody');
+  const rows = snIncidents.filter(i => filter === 'All' || i.state === filter);
+  tbody.innerHTML = rows.map((i,idx) => `
+    <tr style="background:${idx%2===0?'#fff':'#fafafa'}">
+      <td><span class="inc-link">${i.id}</span></td>
+      <td><span class="badge" style="background:${snPriColor[i.priority]};color:#fff">${i.priority}</span></td>
+      <td><span class="badge" style="background:${snStateColor[i.state]}22;color:${snStateColor[i.state]}">${i.state}</span></td>
+      <td style="color:#555">${i.category}</td>
+      <td style="color:#222">${i.desc}</td>
+      <td style="color:#555">${i.assigned}</td>
+      <td style="color:#999;font-size:11px">${i.updated}</td>
+    </tr>`).join('');
+}
+
+function renderJira() {
+  document.getElementById('jira-tbody').innerHTML = jiraIssues.map(i => `
+    <tr>
+      <td><span class="badge" style="background:${i.typeColor};color:#fff">${i.type}</span></td>
+      <td style="color:#0052cc;font-weight:600">${i.id}</td>
+      <td style="font-size:12px">${i.priority}</td>
+      <td style="color:#172b4d">${i.summary}</td>
+      <td style="color:#5e6c84">${i.requester}</td>
+      <td><span class="badge" style="background:#e3fcef;color:#006644;border-radius:20px">${i.status}</span></td>
+      <td style="color:${i.sla==='Breached'?'#e74c3c':'#27ae60'};font-weight:600;font-size:12px">${i.sla}</td>
+      <td style="color:#5e6c84;font-size:11px">${i.created}</td>
+    </tr>`).join('');
+}
+
+function renderZendesk() {
+  document.getElementById('zd-tbody').innerHTML = zdTickets.map(t => `
+    <tr>
+      <td style="color:#6b7280;font-size:12px">#${t.id}</td>
+      <td><span class="zd-status" style="background:${t.statusBg};color:${t.statusColor}">${t.status}</span></td>
+      <td><span style="color:${t.priorityColor};font-weight:600;font-size:12px">● ${t.priority}</span></td>
+      <td style="color:#111827;font-size:13px">${t.subject}</td>
+      <td style="color:#6b7280;font-size:12px">${t.requester}</td>
+      <td style="color:#374151;font-size:12px">${t.assignee}</td>
+      <td style="color:#6b7280;font-size:12px">${t.group}</td>
+      <td style="color:#9ca3af;font-size:11px">${t.updated}</td>
+    </tr>`).join('');
+}
+
+function renderFreshservice() {
+  document.getElementById('fs-tbody').innerHTML = fsTickets.map((t,i) => `
+    <tr style="background:${i%2===0?'#fff':'#fafbff'}">
+      <td style="color:#6366f1;font-weight:600;font-size:12px">${t.id}</td>
+      <td><span style="color:${t.pColor};font-weight:600;font-size:12px">● ${t.priority}</span></td>
+      <td style="color:#1a1f36">${t.subject}</td>
+      <td style="color:#6b7280;font-size:12px">${t.requester}</td>
+      <td><span class="badge" style="background:${t.statusBg};color:${t.statusColor}">${t.status}</span></td>
+      <td style="color:${t.due==='Overdue'?'#ef4444':'#6b7280'};font-size:12px;font-weight:${t.due==='Overdue'?700:400}">${t.due}</td>
+    </tr>`).join('');
+
+  const fsCatalogEl = document.getElementById('fs-catalog-items');
+  if (!fsCatalogEl) return;
+  fsCatalogEl.innerHTML = fsCatalog.map(c => `
+    <div class="catalog-item">
+      <div class="catalog-icon" style="background:${c.bg}">${c.icon}</div>
+      <div><div class="lbl">${c.label}</div><div class="sub">${c.sub}</div></div>
+    </div>`).join('');
+}
+
+/* ═══ INTERACTIONS ═══ */
+function switchTab(tab) {
+  document.querySelectorAll('.platform').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#platform-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+}
+
+function snNav(el) {
+  document.querySelectorAll('.sn-nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  const view = el.getAttribute('data-view');
+  document.querySelectorAll('#servicenow .sn-view').forEach(v => v.style.display = 'none');
+  const target = document.getElementById(view);
+  if (target) target.style.display = 'block';
+  const labels = {
+    'sn-home':'Home Dashboard','sn-incident':'Incident Management',
+    'sn-problem':'Problem Management','sn-change':'Change Management',
+    'sn-catalog':'Service Catalog','sn-cmdb':'Configuration Management (CMDB)',
+    'sn-reports':'Reports & Analytics','sn-knowledge':'Knowledge Base',
+    'sn-hr':'HR Cases','sn-admin':'Administration'
+  };
+  const pg = document.querySelector('#servicenow .breadcrumb .page');
+  if (pg) pg.textContent = labels[view] || view;
+}
+function jiraNav(el) {
+  document.querySelectorAll('.jira-nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  const view = el.getAttribute('data-view');
+  document.querySelectorAll('#jira .jira-view').forEach(v => v.style.display = 'none');
+  const target = document.getElementById(view);
+  if (target) target.style.display = 'block';
+  const labels = {
+    'jira-summary':'Summary','jira-queues':'Queues',
+    'jira-reports':'Reports','jira-catalog':'Service Catalog',
+    'jira-knowledge':'Knowledge Base','jira-assets':'Assets',
+    'jira-oncall':'On-Call Schedule','jira-settings':'Project Settings'
+  };
+  const h1 = document.querySelector('#jira .jira-topbar h1');
+  if (h1) h1.textContent = labels[view] || view;
+}
+function jiraQueue(el) {
+  document.querySelectorAll('.jira-queue-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  const queueName = el.textContent.trim();
+  const queueFilters = {
+    'Your queues': null,
+    'Unassigned': i => i.requester === 'Unassigned' || !i.requester || i.status === 'Waiting for support',
+    'Waiting for support': i => i.status === 'Waiting for support' || i.status === 'Waiting for customer',
+    'Pending approval': i => i.status === 'Pending approval',
+    'Escalated': i => i.status === 'Escalated',
+    'Resolved': i => i.status === 'Resolved' || i.status === 'Done',
+    'All open issues': null
+  };
+  const filterFn = queueFilters[queueName];
+  const filtered = filterFn ? jiraIssues.filter(filterFn) : jiraIssues;
+  document.getElementById('jira-tbody').innerHTML = filtered.length ? filtered.map(i => `
+    <tr>
+      <td><span class="badge" style="background:${i.typeColor};color:#fff">${i.type}</span></td>
+      <td style="color:#0052cc;font-weight:600">${i.id}</td>
+      <td style="font-size:12px">${i.priority}</td>
+      <td style="color:#172b4d">${i.summary}</td>
+      <td style="color:#5e6c84">${i.requester}</td>
+      <td><span class="badge" style="background:#e3fcef;color:#006644;border-radius:20px">${i.status}</span></td>
+      <td style="color:${i.sla==='Breached'?'#e74c3c':'#27ae60'};font-weight:600;font-size:12px">${i.sla}</td>
+      <td style="color:#5e6c84;font-size:11px">${i.created}</td>
+    </tr>`).join('') :
+    '<tr><td colspan="8" style="text-align:center;padding:24px;color:#5e6c84;">No issues in this queue</td></tr>';
+}
+function zdView(el) {
+  document.querySelectorAll('.zd-view-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  const viewName = el.querySelector('span:first-child') ? el.querySelector('span:first-child').textContent.trim() : el.textContent.trim();
+  const h2 = document.querySelector('#zd-views-view .zd-topbar h2');
+  if (h2) h2.textContent = viewName;
+  const zdViewFilters = {
+    'All open tickets': t => t.status === 'Open' || t.status === 'On-hold',
+    'Unassigned': t => t.assignee === 'Unassigned',
+    'Recently updated': t => true,
+    'My tickets': t => t.assignee === 'Jane Doe',
+    'High priority': t => t.priority === 'Urgent' || t.priority === 'High',
+    'Pending review': t => t.status === 'Pending',
+    'Solved today': t => t.status === 'Solved',
+    'VIP customers': t => t.requester === 'Emily Torres' || t.requester === 'Priya Sharma'
+  };
+  const filterFn = zdViewFilters[viewName];
+  const filtered = filterFn ? zdTickets.filter(filterFn) : zdTickets;
+  document.getElementById('zd-tbody').innerHTML = filtered.length ? filtered.map(t => `
+    <tr>
+      <td style="color:#6b7280;font-size:12px">#${t.id}</td>
+      <td><span class="zd-status" style="background:${t.statusBg};color:${t.statusColor}">${t.status}</span></td>
+      <td><span style="color:${t.priorityColor};font-weight:600;font-size:12px">● ${t.priority}</span></td>
+      <td style="color:#111827;font-size:13px">${t.subject}</td>
+      <td style="color:#6b7280;font-size:12px">${t.requester}</td>
+      <td style="color:#374151;font-size:12px">${t.assignee}</td>
+      <td style="color:#6b7280;font-size:12px">${t.group}</td>
+      <td style="color:#9ca3af;font-size:11px">${t.updated}</td>
+    </tr>`).join('') :
+    '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7280;">No tickets in this view</td></tr>';
+}
+function zdIcon(el) {
+  document.querySelectorAll('#zendesk .zd-icon').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  const view = el.getAttribute('data-view');
+  document.querySelectorAll('#zendesk .zd-section-view').forEach(v => v.style.display = 'none');
+  const target = document.getElementById(view);
+  if (target) { target.style.display = 'flex'; }
+}
+function fsNav(el) {
+  document.querySelectorAll('.fs-nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  const view = el.getAttribute('data-view');
+  document.querySelectorAll('#freshservice .fs-view').forEach(v => v.style.display = 'none');
+  const target = document.getElementById(view);
+  if (target) target.style.display = 'block';
+  const labels = {
+    'fs-tickets':'Tickets','fs-problems':'Problems','fs-changes':'Changes',
+    'fs-releases':'Releases','fs-assets':'Assets','fs-cmdb':'CMDB',
+    'fs-catalog':'Service Catalog','fs-knowledge':'Knowledge Base','fs-reports':'Reports'
+  };
+  const h2 = document.querySelector('#freshservice .fs-topbar h2');
+  if (h2) h2.textContent = labels[view] || view;
+}
+function snFilter(btn, filter) {
+  document.querySelectorAll('#sn-filters .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSN(filter);
+}
+function showNewIncident() {
+  document.getElementById('sn-modal').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('sn-modal').style.display = 'none';
+}
+
+/* ═══ INIT ═══ */
+renderSN();
+renderJira();
+renderZendesk();
+renderFreshservice();
+
+/* ═══ MODAL HELPERS ═══ */
+function openModal(id) {
+  const m = document.getElementById(id);
+  if (m) { m.style.display = 'flex'; }
+}
+function closeModalById(id) {
+  const m = document.getElementById(id);
+  if (m) { m.style.display = 'none'; }
+}
+
+/* ═══ TOAST ═══ */
+function showToast(msg) {
+  let t = document.getElementById('sn-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'sn-toast';
+    t.style = 'position:fixed;bottom:28px;right:28px;background:#1b2f53;color:#fff;padding:12px 20px;border-radius:6px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity .3s;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2800);
+}
+
+/* ═══ FRESHSERVICE SUBMIT FUNCTIONS ═══ */
+function submitFsTicket() {
+  const subject = document.getElementById('fs-ticket-subject').value.trim();
+  if (!subject) { showToast('Please enter a Subject'); return; }
+  const id = '#FST-' + (3202 + fsTickets.length);
+  fsTickets.unshift({ id, priority: 'Medium', pColor: '#3b82f6', subject, requester: 'IT Admin', status: 'Open', statusColor: '#ef4444', statusBg: '#fef2f2', due: 'Tomorrow' });
+  renderFreshservice();
+  document.getElementById('fs-ticket-subject').value = '';
+  closeModalById('fs-ticket-modal');
+  showToast('Ticket ' + id + ' created successfully');
+}
+function applyFsFilter() {
+  closeModalById('fs-filter-modal');
+  showToast('Filter applied');
+}
+function fsExport() {
+  showToast('Ticket list exported to CSV');
+}
+function submitFsProblem() {
+  const subject = document.getElementById('fs-problem-subject').value.trim();
+  if (!subject) { showToast('Please enter a Subject'); return; }
+  document.getElementById('fs-problem-subject').value = '';
+  closeModalById('fs-problem-modal');
+  showToast('Problem PRB-' + (Math.floor(Math.random()*9000)+1000) + ' created successfully');
+}
+function submitFsChange() {
+  const subject = document.getElementById('fs-change-subject').value.trim();
+  if (!subject) { showToast('Please enter a Subject'); return; }
+  document.getElementById('fs-change-subject').value = '';
+  closeModalById('fs-change-modal');
+  showToast('Change CHG-' + (Math.floor(Math.random()*9000)+1000) + ' submitted for approval');
+}
+function submitFsRelease() {
+  const name = document.getElementById('fs-release-name').value.trim();
+  if (!name) { showToast('Please enter a Release Name'); return; }
+  document.getElementById('fs-release-name').value = '';
+  closeModalById('fs-release-modal');
+  showToast('Release "' + name + '" created successfully');
+}
+function submitFsAsset() {
+  const name = document.getElementById('fs-asset-name').value.trim();
+  if (!name) { showToast('Please enter an Asset Name'); return; }
+  document.getElementById('fs-asset-name').value = '';
+  closeModalById('fs-asset-modal');
+  showToast('Asset AT-' + (Math.floor(Math.random()*9000)+1000) + ' added successfully');
+}
+
+/* ═══ ZENDESK SUBMIT FUNCTIONS ═══ */
+function submitZdView() {
+  const name = document.getElementById('zd-view-name').value.trim();
+  if (!name) { showToast('Please enter a View Name'); return; }
+  document.getElementById('zd-view-name').value = '';
+  closeModalById('zd-view-modal');
+  showToast('View "' + name + '" created successfully');
+}
+function submitZdTicket() {
+  const subject = document.getElementById('zd-ticket-subject').value.trim();
+  if (!subject) { showToast('Please enter a Subject'); return; }
+  const id = 12482 + zdTickets.length;
+  zdTickets.unshift({ id, status: 'Open', statusColor: '#3b82f6', statusBg: '#eff6ff', priority: 'Normal', priorityColor: '#6b7280', subject, requester: 'IT Admin', assignee: 'Unassigned', group: 'Support', updated: 'Just now' });
+  renderZendesk();
+  document.getElementById('zd-ticket-subject').value = '';
+  closeModalById('zd-ticket-modal');
+  showToast('Ticket #' + id + ' created successfully');
+}
+function submitZdCustomer() {
+  const name = document.getElementById('zd-cust-name').value.trim();
+  const email = document.getElementById('zd-cust-email').value.trim();
+  if (!name) { showToast('Please enter a Full Name'); return; }
+  if (!email) { showToast('Please enter an Email'); return; }
+  document.getElementById('zd-cust-name').value = '';
+  document.getElementById('zd-cust-email').value = '';
+  closeModalById('zd-customer-modal');
+  showToast('Customer "' + name + '" added successfully');
+}
+function zdInstallApp(appName) {
+  showToast(appName + ' installed successfully');
+  event.target.textContent = 'Installed';
+  event.target.style.background = '#d1fae5';
+  event.target.style.color = '#065f46';
+  event.target.onclick = null;
+}
+
+/* ═══ JIRA SUBMIT FUNCTIONS ═══ */
+function submitJiraIssue() {
+  const summary = document.getElementById('jira-issue-summary').value.trim();
+  if (!summary) { showToast('Please enter a Summary'); return; }
+  const key = 'JSM-' + (1043 + jiraIssues.length);
+  jiraIssues.unshift({ id: key, type: 'INC', typeColor: '#e74c3c', priority: '🟡 Medium', status: 'Open', summary, requester: 'IT Admin', sla: '8h 00m', created: 'Just now' });
+  renderJira();
+  document.getElementById('jira-issue-summary').value = '';
+  closeModalById('jira-issue-modal');
+  showToast('Issue ' + key + ' created successfully');
+}
+function submitJiraAsset() {
+  const name = document.getElementById('jira-asset-name').value.trim();
+  if (!name) { showToast('Please enter an Asset Name'); return; }
+  document.getElementById('jira-asset-name').value = '';
+  closeModalById('jira-asset-modal');
+  showToast('Asset AST-' + (Math.floor(Math.random()*9000)+1000) + ' added successfully');
+}
+
+/* ═══ SUBMIT FUNCTIONS ═══ */
+function submitProblem() {
+  const desc = document.getElementById('prb-desc').value.trim();
+  if (!desc) { showToast('Please enter a Short Description'); return; }
+  closeModalById('sn-problem-modal');
+  document.getElementById('prb-desc').value = '';
+  showToast('Problem record PRB' + (Math.floor(Math.random()*9000)+1000) + ' created successfully');
+}
+function submitChange() {
+  const desc = document.getElementById('chg-desc').value.trim();
+  if (!desc) { showToast('Please enter a Short Description'); return; }
+  closeModalById('sn-change-modal');
+  document.getElementById('chg-desc').value = '';
+  showToast('Change request CHG' + (Math.floor(Math.random()*9000)+1000) + ' submitted for approval');
+}
+function submitArticle() {
+  const m = document.getElementById('sn-article-modal');
+  const title = m.querySelector('input').value.trim();
+  if (!title) { showToast('Please enter an Article Title'); return; }
+  closeModalById('sn-article-modal');
+  m.querySelector('input').value = '';
+  m.querySelector('textarea').value = '';
+  showToast('Knowledge article KB' + (Math.floor(Math.random()*9000)+1000) + ' published');
+}
+function submitHRCase() {
+  const m = document.getElementById('sn-hrcase-modal');
+  const inputs = m.querySelectorAll('input');
+  if (!inputs[0].value.trim()) { showToast('Please enter Employee Name'); return; }
+  if (!inputs[1].value.trim()) { showToast('Please enter a Subject'); return; }
+  closeModalById('sn-hrcase-modal');
+  m.querySelectorAll('input,textarea').forEach(i => { i.value = ''; });
+  showToast('HR Case HR' + (Math.floor(Math.random()*9000)+1000) + ' created successfully');
+}
+
+/* ═══ SUBMIT INCIDENT (adds row to table) ═══ */
+function submitIncident() {
+  const modal = document.getElementById('sn-modal');
+  const inputs = modal.querySelectorAll('input, select, textarea');
+  const desc = inputs[0].value.trim();
+  if (!desc) { showToast('Please enter a Short Description'); return; }
+  const priority = inputs[1].value;
+  const category = inputs[2].value;
+  const num = 'INC' + (1001235 + snIncidents.length);
+  snIncidents.unshift({ id: num, priority, state: 'New', category, desc, assigned: 'Unassigned', updated: 'Just now' });
+  renderSN();
+  inputs.forEach(i => { i.value = i.tagName === 'SELECT' ? i.options[0].value : ''; });
+  closeModal();
+  showToast('Incident ' + num + ' created successfully');
+}
+</script>
+</body>
+</html>
